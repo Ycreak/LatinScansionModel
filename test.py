@@ -17,36 +17,19 @@
 import parser
 import utilities
 import numpy as np
+import pandas as pd
 
-utilities = utilities.Utility()
-
-# Provide the folder with Pedecerto XML files here. These will be put in a pandas dataframe
-path = './texts'
-# Optionally, provide a single line for testing purposes
-line = -1
-# Now call the parser and save the dataframe it creates
-parse = parser.Parser(path, line)
-
-df = parse.df
-print(df)
-exit(0)
-
-# Now replace encoding by short and long
-df['length'] = np.where(df['length'] == 'A', 1, df['length'])
-df['length'] = np.where(df['length'] == 'T', 1, df['length'])
-df['length'] = np.where(df['length'] == 'b', 0, df['length'])
-df['length'] = np.where(df['length'] == 'c', 0, df['length'])
+df = pd.read_csv('sample.csv', sep=';')
 
 print(df)
 
-# Model
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn import preprocessing
 
-df = df.drop(['author', 'text', 'line','word_boundary'], axis=1)
+df = df.drop(['syllable'], axis=1)
 
 # Make estimator and estimee
 X = df.drop('length', axis=1)
