@@ -21,6 +21,7 @@ import configparser
 from word2vec.word2vec import Word_vector_creator 
 from preprocessor.preprocessor import Text_preprocessor 
 import utilities as util
+import parser
 
 ########
 # MAIN #
@@ -29,6 +30,7 @@ import utilities as util
 # Temp params
 run_preprocessor = False
 run_model_generator = False
+run_pedecerto = True
 
 # Read the config file for later use
 cf = configparser.ConfigParser()
@@ -51,34 +53,48 @@ if run_model_generator:
 # Load the saved/created model
 word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
 
+# vector = word2vec_model.wv['cru']
+# print(vector)
 
-exit(0)
+if run_pedecerto:
+    # Connect the Pedecerto output to this model
+    path = './texts'
+    # Optionally, provide a single line for testing purposes
+    line = 0 # 97 has lots of elision. 
+    # Now call the parser and save the dataframe it creates
+    parse = parser.Parser(path, line)
 
-# Import files
-import parser
-import utilities
-import numpy as np
+    df = parse.df
+    print(df)
 
-# Import libraries
-import numpy as np
+    df['vector'] = df['syllable']
 
-utilities = utilities.Utility()
+    for i in range(len(df)):
+        syllable = df["syllable"][i]
+        df["vector"][i] = word2vec_model.wv[syllable]
+        print(word2vec_model.wv[syllable])
 
-# Provide the folder with Pedecerto XML files here. These will be put in a pandas dataframe
-path = './texts'
-# Optionally, provide a single line for testing purposes
-line = 0 # 97 has lots of elision. 
-# Now call the parser and save the dataframe it creates
-parse = parser.Parser(path, line)
 
-df = parse.df
-print(df)
-exit(0)
+    print(df)
+
+    # exit(0)
+
+counter = 0
+
+for i in range(len(df)):
+    counter += 1
+    print(df["vector"][i], df["length"][i])
+
+while counter < 20:
+    counter += 1
+    print('[0]', 0)
+
+# exit(0)
 
 # Now replace encoding by short and long
-df['length'] = np.where(df['length'] == 'A', 1, df['length'])
-df['length'] = np.where(df['length'] == 'T', 1, df['length'])
-df['length'] = np.where(df['length'] == 'b', 0, df['length'])
-df['length'] = np.where(df['length'] == 'c', 0, df['length'])
+# df['length'] = np.where(df['length'] == 'A', 1, df['length'])
+# df['length'] = np.where(df['length'] == 'T', 1, df['length'])
+# df['length'] = np.where(df['length'] == 'b', 0, df['length'])
+# df['length'] = np.where(df['length'] == 'c', 0, df['length'])
 
-print(df)
+# print(df)

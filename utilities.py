@@ -34,21 +34,21 @@ def Pickle_read(path, file_name):
     # def __init__(self):
     #     print('Utilities called')
 
-    # def clean(self, ll):
+def clean(ll):
 
-    #     """Remove all corrupt lines from a set of bs4 <line>s
+    """Remove all corrupt lines from a set of bs4 <line>s
 
-    #     Args:
-    #         ll (list of bs4 <line>): Lines to clean
+    Args:
+        ll (list of bs4 <line>): Lines to clean
 
-    #     Returns:
-    #         (list of bs4 <line>): The lines, with the corrupt ones removed.
-    #     """
+    Returns:
+        (list of bs4 <line>): The lines, with the corrupt ones removed.
+    """
 
-    #     return [
-    #         l
-    #         for l in ll
-    #         if l.has_attr("pattern")
-    #         and l["pattern"] != "corrupt"
-    #         and l["pattern"] != "not scanned"
-    #     ]
+    return [
+        l
+        for l in ll
+        if l.has_attr("pattern")
+        and l["pattern"] != "corrupt"
+        and l["pattern"] != "not scanned"
+    ]

@@ -22,8 +22,9 @@ import pandas as pd
 import string
 import os
 
-import utilities
-from scansion_constants import ScansionConstants
+import utilities as util
+from bak.scansion_constants import ScansionConstants
+
 class Parser:
   """This class parses the Pedecerto XML into a dataframe which can be used for
   training models.
@@ -34,10 +35,10 @@ class Parser:
 
   df = pd.DataFrame()
   
-  utilities = utilities.Utility()
+  # utilities = utilities.Utility()
   constants = ScansionConstants()
   
-  def __init__(self, path, givenLine = -1):
+  def __init__(self, path, givenLine):
     # Create pandas dataframe
     column_names = ["author", "text", "line", "syllable", "foot", "feet_pos", "length", "word_boundary", "metrical_feature"]
     self.df = pd.DataFrame(columns = column_names) #FIXME: bad practise to work with self.df. Only update at the end.
@@ -52,7 +53,7 @@ class Parser:
         self.title = soupedEntry.title.string
         self.author = soupedEntry.author.string
         # Clean the lines (done by MQDQ, don't know what it does exactly)
-        soupedEntry = self.utilities.clean(soupedEntry('line'))
+        soupedEntry = util.clean(soupedEntry('line'))
         if givenLine == -1:
           # Do the entire folder
           for line in range(len(soupedEntry)):
@@ -64,8 +65,8 @@ class Parser:
           self.df = self.ProcessLine(soupedEntry[givenLine], self.df)
     
     # Now add features to the dataframe
-    self.df = self.AddFeature_Diphthong(self.df)
-    self.df = self.AddFeature_Speech(self.df)
+    # self.df = self.AddFeature_Diphthong(self.df)
+    # self.df = self.AddFeature_Speech(self.df)
   
   def AddFeature_Speech(self, df):
     df['liquids'] = 0
@@ -180,7 +181,7 @@ class Parser:
       # print('word', word.string, syllabifier.syllabify(word.string))
       
       myWord = word.string
-      mySyllables = syllabifier.syllabify(myWord)
+      mySyllables = syllabifier.syllabify(myWord.lower())
       # We now want to split every syllable to match its scansion.
       item = word['sy']
       n = 2
