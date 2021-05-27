@@ -14,8 +14,52 @@
 # Philippe Bors and Luuk Nolden
 # Leiden University 2021
 
+# Library Imports
+import configparser
+
+# Class Imports
+from word2vec.word2vec import Word_vector_creator 
+from preprocessor.preprocessor import Text_preprocessor 
+import utilities as util
+
+########
+# MAIN #
+########
+
+# Temp params
+run_preprocessor = False
+run_model_generator = False
+
+# Read the config file for later use
+cf = configparser.ConfigParser()
+cf.read("config.ini")
+
+# Run the preprocessor on the given text if needed
+if run_preprocessor:
+    preprocessor = Text_preprocessor(cf.get('Text', 'name'))
+    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'), preprocessor.character_list)
+
+# Load the preprocessed text
+character_list = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'))
+
+# Run the model generator on the given list if needed
+if run_model_generator:
+    # Create a word2vec model from the provided character list
+    word2vec_creator = Word_vector_creator(character_list, cf.getint('Word2Vec', 'vector_size'), cf.getint('Word2Vec', 'window_size'))
+    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'), word2vec_creator.model)
+
+# Load the saved/created model
+word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
+
+
+exit(0)
+
+# Import files
 import parser
 import utilities
+import numpy as np
+
+# Import libraries
 import numpy as np
 
 utilities = utilities.Utility()
@@ -23,7 +67,7 @@ utilities = utilities.Utility()
 # Provide the folder with Pedecerto XML files here. These will be put in a pandas dataframe
 path = './texts'
 # Optionally, provide a single line for testing purposes
-line = -1
+line = 0 # 97 has lots of elision. 
 # Now call the parser and save the dataframe it creates
 parse = parser.Parser(path, line)
 
@@ -38,33 +82,3 @@ df['length'] = np.where(df['length'] == 'b', 0, df['length'])
 df['length'] = np.where(df['length'] == 'c', 0, df['length'])
 
 print(df)
-
-# Model
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn import preprocessing
-
-df = df.drop(['author', 'text', 'line','word_boundary'], axis=1)
-
-# Make estimator and estimee
-X = df.drop('length', axis=1)
-y = df['length']
-
-# Make train and testset
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
-
-#Import Random Forest Model
-from sklearn.ensemble import RandomForestClassifier
-
-#Create a Gaussian Classifier
-clf = RandomForestClassifier(n_estimators=100)
-
-#Train the model using the training sets y_pred=clf.predict(X_test)
-clf.fit(X_train,y_train)
-
-y_pred=clf.predict(X_test)
-
-print(confusion_matrix(y_test,y_pred))
-print(classification_report(y_test,y_pred))
