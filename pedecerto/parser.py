@@ -25,7 +25,7 @@ import os
 import utilities as util
 from bak.scansion_constants import ScansionConstants
 
-class Parser:
+class Pedecerto_parser:
   """This class parses the Pedecerto XML into a dataframe which can be used for
   training models.
   """  
@@ -48,7 +48,7 @@ class Parser:
     entries = self.CreateFilesList(path, 'xml')
     # Process all entries added to the list
     for entry in entries:
-      with open('./texts/' + entry) as fh:
+      with open(path + entry) as fh:
         # Use beautiful soup to process the xml
         soupedEntry = BeautifulSoup(fh,"xml")
         # Retrieve the title and author from the xml file
@@ -58,7 +58,8 @@ class Parser:
         soupedEntry = util.clean(soupedEntry('line'))
         if givenLine == -1:
           # Do the entire folder
-          for line in range(len(soupedEntry)):
+          # for line in range(len(soupedEntry)):
+          for line in range(2):
             print('Progress on', self.author, self.title, ':', round(line / len(soupedEntry) * 100, 2), "%")
             # Process the entry. It will append the line to the df
             self.df = self.ProcessLine(soupedEntry[line], self.df)
@@ -115,13 +116,13 @@ class Parser:
           foot = myScansion[0]
           feet_pos = myScansion[1]
           # No metrical feature, so leave field empty
-          myMf2 = ''
+          # myMf2 = ''
 
         except:
           myScansion = ''
           foot = feet_pos = ''
           # Add the reason for this emptiness
-          myMf2 = myMf
+          # myMf2  = myMf
         
         if feet_pos == 'A':
           length = 1

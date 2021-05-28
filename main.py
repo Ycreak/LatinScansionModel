@@ -16,12 +16,14 @@
 
 # Library Imports
 import configparser
-
+import pandas as pd
+import numpy as np
 # Class Imports
 from word2vec.word2vec import Word_vector_creator 
 from preprocessor.preprocessor import Text_preprocessor 
 import utilities as util
-import parser
+from pedecerto.parser import Pedecerto_parser
+
 
 ########
 # MAIN #
@@ -30,7 +32,7 @@ import parser
 # Temp params
 run_preprocessor = False
 run_model_generator = False
-run_pedecerto = True
+run_pedecerto = False
 
 # Read the config file for later use
 cf = configparser.ConfigParser()
@@ -53,43 +55,55 @@ if run_model_generator:
 # Load the saved/created model
 word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
 
-# vector = word2vec_model.wv['cru']
-# print(vector)
-
 if run_pedecerto:
     # Connect the Pedecerto output to this model
-    path = './texts'
-    # Optionally, provide a single line for testing purposes
-    line = 0 # 97 has lots of elision. 
+    line = -1 # 97 has lots of elision. 
     # Now call the parser and save the dataframe it creates
-    parse = parser.Parser(path, line)
+    parse = Pedecerto_parser(cf.get('Pedecerto', 'path_texts'), line)  
+    parse.df.to_csv(cf.get('Pickle', 'pedecerto_df'), index = False, header=True)
 
-    df = parse.df
-    print(df)
+pedecerto_df = pd.read_csv(cf.get('Pickle', 'pedecerto_df'), sep=',')
 
-    df['vector'] = df['syllable']
+df = pedecerto_df
+# Add syllable vectors to the dataframe using the word2vec model
+df['vector'] = df['syllable']
+# TODO: this might be in a try, although all syllables are present
+for i in range(len(df)):
+    syllable = df["syllable"][i]
+    df["vector"][i] = word2vec_model.wv[syllable]
+    # print(type(word2vec_model.wv[syllable]))
 
-    for i in range(len(df)):
-        syllable = df["syllable"][i]
-        df["vector"][i] = word2vec_model.wv[syllable]
-        print(word2vec_model.wv[syllable])
+print(df)
 
+num_lines = df["line"].max()
+print(num_lines)
+# max_value = column.max()
 
-    print(df)
+# Loop through the the lines and their vectors
+for i in range(num_lines):
+    # print(i)
 
-    # exit(0)
+    temp = df[df["line"] == i+1]
+    
+    
+    
+    exit(0)
+    
+    print(temp)
 
 counter = 0
 
-for i in range(len(df)):
-    counter += 1
-    print(df["vector"][i], df["length"][i])
+# for i in range(len(df)):
+#     counter += 1
+#     print(df["vector"][i], df["length"][i])
 
-while counter < 20:
-    counter += 1
-    print('[0]', 0)
+# while counter < 20:
+#     counter += 1
+#     print('[0]', 0)
 
-# exit(0)
+temp = np.zeros(cf.getint('Word2Vec', 'vector_size'))
+print(temp)
+# print(type(temp))
 
 # Now replace encoding by short and long
 # df['length'] = np.where(df['length'] == 'A', 1, df['length'])
