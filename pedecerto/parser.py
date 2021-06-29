@@ -56,15 +56,18 @@ class Pedecerto_parser:
         # Retrieve the title and author from the xml file
         self.title = soupedEntry.title.string
         self.author = soupedEntry.author.string
-        # Clean the lines (done by MQDQ, don't know what it does exactly)
+        # Clean the lines (done by MQDQ)
         soupedEntry = util.clean(soupedEntry('line'))
+
         if givenLine == -1:
           # Do the entire folder
           for line in range(len(soupedEntry)):
           # for line in range(4):
             print('Progress on', self.author, self.title, ':', round(line / len(soupedEntry) * 100, 2), "%")
+            
             # Process the entry. It will append the line to the df
             self.df = self.ProcessLine(soupedEntry[line], self.df)
+        
         else:
           # Process just the given line (testing purposes).
           self.df = self.ProcessLine(soupedEntry[givenLine], self.df)
