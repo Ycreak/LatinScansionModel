@@ -24,6 +24,7 @@ from preprocessor.preprocessor import Text_preprocessor
 import utilities as util
 from pedecerto.parser import Pedecerto_parser
 
+import neural_network.main as nn
 
 ########
 # MAIN #
@@ -31,8 +32,10 @@ from pedecerto.parser import Pedecerto_parser
 
 # Temp params
 run_preprocessor = False
+run_pedecerto = False
 run_model_generator = False
-run_pedecerto = True
+add_embeddings_to_df = False
+run_neural_network = True
 
 # Read the config file for later use
 cf = configparser.ConfigParser()
@@ -48,14 +51,6 @@ if run_preprocessor:
 # Load the preprocessed text
 character_list = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'))
 
-# Run the model generator on the given list if needed
-if run_model_generator:
-    # Create a word2vec model from the provided character list
-    word2vec_creator = Word_vector_creator(character_list, cf.getint('Word2Vec', 'vector_size'), cf.getint('Word2Vec', 'window_size'))
-    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'), word2vec_creator.model)
-
-# Load the saved/created model
-word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
 
 ''' Now create a dataframe. Containing: syllable, length, vector.
 '''
@@ -66,57 +61,32 @@ if run_pedecerto:
 
 pedecerto_df = pd.read_csv(cf.get('Pickle', 'pedecerto_df'), sep=',')
 
-print(pedecerto_df)
+# Run the model generator on the given list if needed
+if run_model_generator:
+    # Create a word2vec model from the provided character list
+    word2vec_creator = Word_vector_creator(character_list, cf.getint('Word2Vec', 'vector_size'), cf.getint('Word2Vec', 'window_size'))
+    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'), word2vec_creator.model)
 
-# exit(0)
+# Load the saved/created model
+word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
 
-df = pedecerto_df
-# Add syllable vectors to the dataframe using the word2vec model
-df['vector'] = df['syllable']
-# TODO: this might be in a try, although all syllables are present
-for i in range(len(df)):
-    syllable = df["syllable"][i]
-    df["vector"][i] = word2vec_model.wv[syllable]
-    # print(type(word2vec_model.wv[syllable]))
+if add_embeddings_to_df:
 
-print(df)
-
-exit(0)
-
-num_lines = df["line"].max()
-print(num_lines)
-# max_value = column.max()
-
-# Loop through the the lines and their vectors
-for i in range(num_lines):
-    # print(i)
-
-    temp = df[df["line"] == i+1]
+    df = pedecerto_df
     
+    # Add syllable vectors to the dataframe using the word2vec model
+    df['vector'] = df['syllable']
+    for i in range(len(df)):
+        try:
+            syllable = df["syllable"][i]
+            df["vector"][i] = word2vec_model.wv[syllable]
+        except:
+            IndexError('Syllable has no embedding yet.')
+
+    df.to_csv(cf.get('Pickle', 'embedding_df'), index = False, header=True)
+
+if run_neural_network:
     
+    df = pd.read_csv(cf.get('Pickle', 'embedding_df'), sep=',')
     
-    exit(0)
-    
-    print(temp)
-
-counter = 0
-
-# for i in range(len(df)):
-#     counter += 1
-#     print(df["vector"][i], df["length"][i])
-
-# while counter < 20:
-#     counter += 1
-#     print('[0]', 0)
-
-temp = np.zeros(cf.getint('Word2Vec', 'vector_size'))
-print(temp)
-# print(type(temp))
-
-# Now replace encoding by short and long
-# df['length'] = np.where(df['length'] == 'A', 1, df['length'])
-# df['length'] = np.where(df['length'] == 'T', 1, df['length'])
-# df['length'] = np.where(df['length'] == 'b', 0, df['length'])
-# df['length'] = np.where(df['length'] == 'c', 0, df['length'])
-
-# print(df)
+    nn.Start_neural_network(df)

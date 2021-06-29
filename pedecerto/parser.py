@@ -23,7 +23,7 @@ import string
 import os
 
 import utilities as util
-from bak.scansion_constants import ScansionConstants
+# from bak.scansion_constants import ScansionConstants
 
 import pedecerto.rhyme as pedecerto
 
@@ -38,7 +38,7 @@ class Pedecerto_parser:
   df = pd.DataFrame()
   
   # utilities = utilities.Utility()
-  constants = ScansionConstants()
+  # constants = ScansionConstants()
   
   def __init__(self, path, givenLine):
     # Create pandas dataframe
