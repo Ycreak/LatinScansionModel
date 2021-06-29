@@ -52,3 +52,23 @@ def clean(ll):
         and l["pattern"] != "corrupt"
         and l["pattern"] != "not scanned"
     ]
+
+def Create_files_list(path, extension):
+    """Creates a list of files to be processed
+
+    Args:
+        path (string): folder to be searched
+        extension (string): extension of files to be searched
+
+    Returns:
+        list: list with files to be searched
+    """
+    import os
+    
+    list = []
+
+    for file in os.listdir(path):
+        if file.endswith(".xml"):
+            list.append(file)    
+
+    return list

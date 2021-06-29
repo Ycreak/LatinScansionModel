@@ -25,6 +25,8 @@ import os
 import utilities as util
 from bak.scansion_constants import ScansionConstants
 
+import pedecerto.rhyme as pedecerto
+
 class Pedecerto_parser:
   """This class parses the Pedecerto XML into a dataframe which can be used for
   training models.
@@ -40,12 +42,12 @@ class Pedecerto_parser:
   
   def __init__(self, path, givenLine):
     # Create pandas dataframe
-    column_names = ["author", "text", "line", "syllable", "foot", "feet_pos", "length"]
+    column_names = ["author", "text", "line", "syllable", "length"]
     # column_names = ["author", "text", "line", "syllable", "foot", "feet_pos", "length", "word_boundary", "metrical_feature"]
     self.df = pd.DataFrame(columns = column_names) #FIXME: bad practise to work with self.df. Only update at the end.
     
     # Add all entries to process to a list
-    entries = self.CreateFilesList(path, 'xml')
+    entries = util.Create_files_list(path, 'xml')
     # Process all entries added to the list
     for entry in entries:
       with open(path + entry) as fh:
@@ -58,8 +60,8 @@ class Pedecerto_parser:
         soupedEntry = util.clean(soupedEntry('line'))
         if givenLine == -1:
           # Do the entire folder
-          # for line in range(len(soupedEntry)):
-          for line in range(2):
+          for line in range(len(soupedEntry)):
+          # for line in range(4):
             print('Progress on', self.author, self.title, ':', round(line / len(soupedEntry) * 100, 2), "%")
             # Process the entry. It will append the line to the df
             self.df = self.ProcessLine(soupedEntry[line], self.df)
@@ -73,176 +75,244 @@ class Pedecerto_parser:
   
   # Returns the dataframe appended
   def ProcessLine(self, givenLine, df):
-    syllabifier = Syllabifier()
 
-    words = givenLine.find_all('word')
+    current_line = givenLine['name']
 
-    line = givenLine['name']
-
-    for word in words:
+    # Parse every word and add its features
+    for w in givenLine("word"):
       
-      myWord = word.string
-      mySyllables = syllabifier.syllabify(myWord.lower())
-      # We now want to split every syllable to match its scansion.
-      item = word['sy']
-      n = 2
-      # print('syllable', [item[i:i+n] for i in range(0, len(item), n)])
-      myScansions = [item[i:i+n] for i in range(0, len(item), n)]
+      # Now for every word, syllabify it first
+      word_syllable_list = pedecerto._syllabify_word(w)
+      # And get its scansion
+      scansion = w["sy"]
+      
+      # Check how many syllables we have according to pedecerto
+      split_scansion = [scansion[i:i+2] for i in range(0, len(scansion), 2)] # per two characters
 
-      # try:
-      #   # print('word boundary', word['wb'])
-      #   myWb = word['wb']
-      # except:
-      #   # print("empty field") 
-      #   myWb = ''
-      # try:
-      #   # print('metrical feature', word['mf'])
-      #   myMf = word['mf']
+      # We use this to detect elision      
+      number_of_scansions = len(split_scansion)
 
-      # except:
-      #   # print("empty field")   
-      #   myMf = ''
-
-      # print('-------------------------------')
-
-      for i in range(len(mySyllables)):
-        mySyllable = mySyllables[i]
-        # To remove punctuation.
-        mySyllable = mySyllable.translate(str.maketrans('', '', string.punctuation))
-
-
-        try:
-          myScansion = myScansions[i]
-          foot = myScansion[0]
-          feet_pos = myScansion[1]
-          # No metrical feature, so leave field empty
-          # myMf2 = ''
-
-        except:
-          myScansion = ''
-          foot = feet_pos = ''
-          # Add the reason for this emptiness
-          # myMf2  = myMf
+      for i in range(len(word_syllable_list)):
+        # Now we loop through the syllable list of said word and extract features
+        mySyllable = word_syllable_list[i].lower()
         
-        if feet_pos == 'A':
-          length = 1
-        elif feet_pos == 'T':
-          length = 1
-        elif feet_pos == 'b':
-          length = 0
-        elif feet_pos == 'c':
-          length = 0
-        elif feet_pos == '':
-          length = -1
+        # If we still have scansions available
+        if number_of_scansions > 0:
+
+          foot = split_scansion[i][0]
+          feet_pos = split_scansion[i][1]
+
+          if feet_pos == 'A':
+            length = 1
+          elif feet_pos == 'T':
+            length = 1
+          elif feet_pos == 'b':
+            length = 0
+          elif feet_pos == 'c':
+            length = 0
+          elif feet_pos == '':
+            length = -1        
+
+        # No scansions available? Elision. Denote with -1
         else:
-          print('Error occured determining feet_pos of syllable')
+          length = -1
+          feet_pos = 'NA'
+          foot = 'NA'
 
-        # Now, fill the dataframe: TODO: split length in foot and length
-        newLine = {'author': self.author, 'text': self.title, 'line': line, 'syllable': mySyllable, 'foot': foot, 'feet_pos': feet_pos, 
-          'length': length}
-        
-        # newLine = {'author': self.author, 'text': self.title, 'line': line, 'syllable': mySyllable, 'foot': foot, 'feet_pos': feet_pos, 
-        #   'length': length, 'word_boundary': myWb, 'metrical_feature': myMf2}        
-        
+        number_of_scansions -= 1
+
+        # Append to dataframe
+        newLine = {'line': current_line, 'syllable': mySyllable, 'length': length}
         df = df.append(newLine, ignore_index=True)
 
     return df
 
-  def AddFeature_Speech(self, df):
-    df['liquids'] = 0
-    df['nasals'] = 0
-    df['fricatives'] = 0
-    # df['clusterable'] = 0
-    df['mutes'] = 0
-    df['aspirate'] = 0
-    df['doubled_consonant'] = 0
+    # exit(0)
 
-    df['char_first'] = 0
-    df['char_second'] = 0
-    df['char_ultima'] = 0
-    df['char_penultima'] = 0
+    # all_syllables = syllabify_line(givenLine)
+    # # Flatten list (hack)
+    # all_syllables = [item for sublist in all_syllables for item in sublist]
 
-    for i in range(len(df)):
-      if any(liquid in df["syllable"][i] for liquid in self.constants.LIQUIDS):
-        df['liquids'][i] = 1
-      if any(nasal in df["syllable"][i] for nasal in self.constants.NASALS):
-        df['nasals'][i] = 1
-      if any(fricative in df["syllable"][i] for fricative in self.constants.FRICATIVES):
-        df['fricatives'][i] = 1
-      if any(mute in df["syllable"][i] for mute in self.constants.MUTES):
-        df['mutes'][i] = 1        
-      if any(aspirate in df["syllable"][i] for aspirate in self.constants.ASPIRATES):
-        df['mutes'][i] = 1    
+    # words = givenLine.find_all('word')
+
+    # line = givenLine['name']
+
+    # length_list = []
+
+    # for word in words:
       
-      df = self.CheckConsonantStatus(df["syllable"][i], df, i)
+    #   # word_syllabified = syllabify_line(word.string)
 
-    return df
-
-  def CheckConsonantStatus(self, string, df, i):
-    
-    char_first = string[0] 
-    char_ultima = string[-1] 
-
-    try:
-      char_second = string[1]
-      char_penultima = string[-2]
-    except:
-      char_second = '-'
-      char_penultima = '-'
-      print('String probably one character, continuing')
-
-    if char_first in self.constants.CONSONANTS:
-      print('first char is consonant')
-      df['cons_first'][i] = 1
-
-    if char_second in self.constants.CONSONANTS:
-      print('second char is consonant')
-      df['cons_second'][i] = 1
-
-    if char_ultima in self.constants.CONSONANTS:
-      print('last char is consonant')
-      df['cons_ultima'][i] = 1
-
-    if char_penultima in self.constants.CONSONANTS:
-      print('second to last char is consonant')
-      df['cons_penultima'][i] = 1
-
-    return df
+    #   # print(word_syllabified)
 
 
-  def AddFeature_Diphthong(self, df):
-    """Adds a diphtong feature to the given dataframe based on the syllable column
+    #   # We now want to split every syllable to match its scansion.
+    #   scansion = word['sy']
+    #   current_word = word.string
+    #   # print(item)
+    #   n = 2
+    #   # print('syllable', [item[i:i+n] for i in range(0, len(item), n)])
+    #   split_scansion = [scansion[i:i+n] for i in range(0, len(scansion), n)] # per two characters
 
-    Args:
-        df (dataframe): does what it says on the tin
+    #   print(split_scansion, len(split_scansion))
+      
+    #   for syllable in all_syllables:
+    #     if syllable in current_word:
+    #       print(syllable, current_word)
+    #       exit(0)
 
-    Returns:
-        df: dataframe with diphtong column appended
-    """    
-    # Initialise diphthong column to 0.
-    df['diphtong'] = 0
-    
-    for i in range(len(df)):
-      if any(diphtong in df["syllable"][i] for diphtong in self.constants.DIPTHONGS):
-        df['diphtong'][i] = 1
+    #   exit(0)
+
+    #   length_list.extend(myScansions)
+
+    # print(all_syllables, len(all_syllables))
+    # print(length_list, len(length_list))
+
+    # if len(all_syllables) == len(length_list):
+    #   for i in range(len(all_syllables)):
+
+    #     foot = length_list[i][0]
+    #     feet_pos = length_list[i][1]
+    #     mySyllable = all_syllables[i].lower()
+
+    #     if feet_pos == 'A':
+    #       length = 1
+    #     elif feet_pos == 'T':
+    #       length = 1
+    #     elif feet_pos == 'b':
+    #       length = 0
+    #     elif feet_pos == 'c':
+    #       length = 0
+    #     elif feet_pos == '':
+    #       length = -1        
+
+    #     print(all_syllables[i], length_list[i], length)
+
+    #     newLine = {'author': self.author, 'text': self.title, 'line': line, 'syllable': mySyllable, 'foot': foot, 'feet_pos': feet_pos, 
+    #       'length': length}
+    #     df = df.append(newLine, ignore_index=True)
+
+
+    # else:
+    #   raise ValueError("Length mismatch!")
+
+        # Now, fill the dataframe: TODO: split length in foot and length
+
+    # exit(0)
+      # exit(0)
+
+      # for i in range(len(mySyllables)):
+      #   mySyllable = mySyllables[i]
+      #   # To remove punctuation.
+      #   mySyllable = mySyllable.translate(str.maketrans('', '', string.punctuation))
+
+
+      #   try:
+      #     myScansion = myScansions[i]
+      #     foot = myScansion[0]
+      #     feet_pos = myScansion[1]
         
-    return df
+      #   if feet_pos == 'A':
+      #     length = 1
+      #   elif feet_pos == 'T':
+      #     length = 1
+      #   elif feet_pos == 'b':
+      #     length = 0
+      #   elif feet_pos == 'c':
+      #     length = 0
+      #   elif feet_pos == '':
+      #     length = -1
+      #   else:
+      #     print('Error occured determining feet_pos of syllable')
 
-  def CreateFilesList(self, path, extension):
-    """Creates a list of files to be processed
 
-    Args:
-        path (string): folder to be searched
-        extension (string): extension of files to be searched
+        
+        # # newLine = {'author': self.author, 'text': self.title, 'line': line, 'syllable': mySyllable, 'foot': foot, 'feet_pos': feet_pos, 
+        # #   'length': length, 'word_boundary': myWb, 'metrical_feature': myMf2}        
+        
 
-    Returns:
-        list: list with files to be searched
-    """
-    list = []
+    # return df
+
+# UNUSED FUNCTIONS (for now)
+  # def AddFeature_Speech(self, df):
+  #   df['liquids'] = 0
+  #   df['nasals'] = 0
+  #   df['fricatives'] = 0
+  #   # df['clusterable'] = 0
+  #   df['mutes'] = 0
+  #   df['aspirate'] = 0
+  #   df['doubled_consonant'] = 0
+
+  #   df['char_first'] = 0
+  #   df['char_second'] = 0
+  #   df['char_ultima'] = 0
+  #   df['char_penultima'] = 0
+
+  #   for i in range(len(df)):
+  #     if any(liquid in df["syllable"][i] for liquid in self.constants.LIQUIDS):
+  #       df['liquids'][i] = 1
+  #     if any(nasal in df["syllable"][i] for nasal in self.constants.NASALS):
+  #       df['nasals'][i] = 1
+  #     if any(fricative in df["syllable"][i] for fricative in self.constants.FRICATIVES):
+  #       df['fricatives'][i] = 1
+  #     if any(mute in df["syllable"][i] for mute in self.constants.MUTES):
+  #       df['mutes'][i] = 1        
+  #     if any(aspirate in df["syllable"][i] for aspirate in self.constants.ASPIRATES):
+  #       df['mutes'][i] = 1    
+      
+  #     df = self.CheckConsonantStatus(df["syllable"][i], df, i)
+
+  #   return df
+
+  # def CheckConsonantStatus(self, string, df, i):
     
-    for file in os.listdir(path):
-        if file.endswith(".xml"):
-            list.append(file)    
+  #   char_first = string[0] 
+  #   char_ultima = string[-1] 
+
+  #   try:
+  #     char_second = string[1]
+  #     char_penultima = string[-2]
+  #   except:
+  #     char_second = '-'
+  #     char_penultima = '-'
+  #     print('String probably one character, continuing')
+
+  #   if char_first in self.constants.CONSONANTS:
+  #     print('first char is consonant')
+  #     df['cons_first'][i] = 1
+
+  #   if char_second in self.constants.CONSONANTS:
+  #     print('second char is consonant')
+  #     df['cons_second'][i] = 1
+
+  #   if char_ultima in self.constants.CONSONANTS:
+  #     print('last char is consonant')
+  #     df['cons_ultima'][i] = 1
+
+  #   if char_penultima in self.constants.CONSONANTS:
+  #     print('second to last char is consonant')
+  #     df['cons_penultima'][i] = 1
+
+  #   return df
+
+
+  # def AddFeature_Diphthong(self, df):
+  #   """Adds a diphtong feature to the given dataframe based on the syllable column
+
+  #   Args:
+  #       df (dataframe): does what it says on the tin
+
+  #   Returns:
+  #       df: dataframe with diphtong column appended
+  #   """    
+  #   # Initialise diphthong column to 0.
+  #   df['diphtong'] = 0
     
-    return list
+  #   for i in range(len(df)):
+  #     if any(diphtong in df["syllable"][i] for diphtong in self.constants.DIPTHONGS):
+  #       df['diphtong'][i] = 1
+        
+  #   return df
+
+
 

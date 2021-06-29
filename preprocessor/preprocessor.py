@@ -7,28 +7,100 @@ from cltk.corpus.utils.importer import CorpusImporter
 from cltk.corpus.readers import get_corpus_reader
 from cltk.stem.latin.syllabifier import Syllabifier
 
+from pedecerto.rhyme import *
+
+from bs4 import BeautifulSoup
+
 import utilities as util
 
 class Text_preprocessor:
 
     def __init__(self, text):
 
+    # # Add all entries to process to a list
+    # entries = self.CreateFilesList(path, 'xml')
+    # # Process all entries added to the list
+    # for entry in entries:
+    #   with open(path + entry) as fh:
+    #     # Use beautiful soup to process the xml
+    #     soupedEntry = BeautifulSoup(fh,"xml")
+    #     # Retrieve the title and author from the xml file
+    #     self.title = soupedEntry.title.string
+    #     self.author = soupedEntry.author.string
+    #     # Clean the lines (done by MQDQ, don't know what it does exactly)
+    #     soupedEntry = util.clean(soupedEntry('line'))
+    #     if givenLine == -1:
+    #       # Do the entire folder
+    #       # for line in range(len(soupedEntry)):
+    #       for line in range(2):
+    #         print('Progress on', self.author, self.title, ':', round(line / len(soupedEntry) * 100, 2), "%")
+    #         # Process the entry. It will append the line to the df
+    #         self.df = self.ProcessLine(soupedEntry[line], self.df)
+    #     else:
+    #       # Process just the given line (testing purposes).
+    #       self.df = self.ProcessLine(soupedEntry[givenLine], self.df)
+    
+    # Now add features to the dataframe
+    # self.df = self.AddFeature_Diphthong(self.df)
+    # self.df = self.AddFeature_Speech(self.df)
+  
+        word_list = []
+        # TODO: not hard coded text
+        with open('texts/VERG-aene.xml') as fh:
+            # Use beautiful soup to process the xml
+            soupedEntry = BeautifulSoup(fh,"xml")
+            # Retrieve the title and author from the xml file
+            soupedEntry = util.clean(soupedEntry('line'))
+            # Do the entire folder
+            for line in range(len(soupedEntry)):
+                # print('Progress on', ':', round(line / len(soupedEntry) * 100, 2), "%")
+                # Process the entry. It will append the line to the df
+                # self.df = 
+                word_list.extend(self.Syllabify_line(soupedEntry[line]))
 
-        corpus_importer = CorpusImporter('latin')
-        corpus_importer.import_corpus('latin_text_perseus')
-        # corpus_importer.import_corpus('latin_models_cltk')
         
-
-        word_list = self.Get_word_list(text)
-
-        # Clean the text
+        # Clean the text (already done by pedecerto)
         word_list = self.Remove_numbers(word_list)
         word_list = self.Remove_element_from_list(word_list, '')
         word_list = self.Lowercase_list(word_list)
 
-        word_list = self.Syllabify_list(word_list)
+        # print(word_list)
 
         self.character_list = word_list
+
+    # Returns the dataframe appended
+    def Syllabify_line(self, givenLine):
+
+        all_syllables = syllabify_line(givenLine)
+        
+        # Flatten list (hack)
+        all_syllables = [item for sublist in all_syllables for item in sublist]
+
+        return all_syllables
+
+
+    # Returns the dataframe appended
+    def ProcessLine(self, givenLine):
+        # syllabifier = Syllabifier()
+
+        # all_syllables = syllabify_line(givenLine)
+        # # Flatten list (hack)
+        # all_syllables = [item for sublist in all_syllables for item in sublist]
+
+        temp_list = []
+
+        words = givenLine.find_all('word')
+
+        for word in words:
+            temp_list.append(word.string)
+
+            # print(myWord)
+
+
+        # print(words)
+        return temp_list
+
+        exit(0)
 
     def Syllabify_list(self, given_list):
         syllabifier = Syllabifier()

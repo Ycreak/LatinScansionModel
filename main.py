@@ -32,13 +32,15 @@ from pedecerto.parser import Pedecerto_parser
 # Temp params
 run_preprocessor = False
 run_model_generator = False
-run_pedecerto = False
+run_pedecerto = True
 
 # Read the config file for later use
 cf = configparser.ConfigParser()
 cf.read("config.ini")
 
-# Run the preprocessor on the given text if needed
+# Run the preprocessor on the given text if needed.
+# This reads the text, cleans it and returns a list of syllables for now
+# To achieve this, the pedecerto tool is used
 if run_preprocessor:
     preprocessor = Text_preprocessor(cf.get('Text', 'name'))
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'), preprocessor.character_list)
@@ -55,14 +57,18 @@ if run_model_generator:
 # Load the saved/created model
 word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
 
+''' Now create a dataframe. Containing: syllable, length, vector.
+'''
 if run_pedecerto:
-    # Connect the Pedecerto output to this model
-    line = -1 # 97 has lots of elision. 
-    # Now call the parser and save the dataframe it creates
-    parse = Pedecerto_parser(cf.get('Pedecerto', 'path_texts'), line)  
+
+    parse = Pedecerto_parser(cf.get('Pedecerto', 'path_texts'), -1)  
     parse.df.to_csv(cf.get('Pickle', 'pedecerto_df'), index = False, header=True)
 
 pedecerto_df = pd.read_csv(cf.get('Pickle', 'pedecerto_df'), sep=',')
+
+print(pedecerto_df)
+
+# exit(0)
 
 df = pedecerto_df
 # Add syllable vectors to the dataframe using the word2vec model
@@ -74,6 +80,8 @@ for i in range(len(df)):
     # print(type(word2vec_model.wv[syllable]))
 
 print(df)
+
+exit(0)
 
 num_lines = df["line"].max()
 print(num_lines)
