@@ -1,19 +1,3 @@
-#       ___       ___           ___     
-#      /\__\     /\  \         /\__\    
-#     /:/  /    /::\  \       /::|  |   
-#    /:/  /    /:/\ \  \     /:|:|  |   
-#   /:/  /    _\:\~\ \  \   /:/|:|__|__ 
-#  /:/__/    /\ \:\ \ \__\ /:/ |::::\__\
-#  \:\  \    \:\ \:\ \/__/ \/__/~~/:/  /
-#   \:\  \    \:\ \:\__\         /:/  / 
-#    \:\  \    \:\/:/  /        /:/  /  
-#     \:\__\    \::/  /        /:/  /   
-#      \/__/     \/__/         \/__/    
-
-# Latin Scansion Model
-# Philippe Bors and Luuk Nolden
-# Leiden University 2021
-
 from bs4 import BeautifulSoup
 # from cltk.stem.latin.syllabifier import Syllabifier
 from cltk.prosody.latin.syllabifier import Syllabifier
@@ -31,20 +15,17 @@ class Pedecerto_parser:
   """This class parses the Pedecerto XML into a dataframe which can be used for
   training models.
   """  
-  # Needed variables
-  author = ''
-  title = ''
 
   df = pd.DataFrame()
   
   # utilities = utilities.Utility()
   # constants = ScansionConstants()
   
-  def __init__(self, path, givenLine):
+  def __init__(self, path, givenLine = -1):
     # Create pandas dataframe
     column_names = ["author", "text", "line", "syllable", "length"]
     # column_names = ["author", "text", "line", "syllable", "foot", "feet_pos", "length", "word_boundary", "metrical_feature"]
-    self.df = pd.DataFrame(columns = column_names) #FIXME: bad practise to work with self.df. Only update at the end.
+    df = pd.DataFrame(columns = column_names) 
     
     # Add all entries to process to a list
     entries = util.Create_files_list(path, 'xml')
@@ -62,23 +43,26 @@ class Pedecerto_parser:
         if givenLine == -1:
           # Do the entire folder
           for line in range(len(soupedEntry)):
-          # for line in range(4):
             print('Progress on', self.author, self.title, ':', round(line / len(soupedEntry) * 100, 2), "%")
-            
             # Process the entry. It will append the line to the df
-            self.df = self.ProcessLine(soupedEntry[line], self.df)
-        
+            df = self.Process_line(soupedEntry[line], df)
         else:
           # Process just the given line (testing purposes).
-          self.df = self.ProcessLine(soupedEntry[givenLine], self.df)
+          df = self.Process_line(soupedEntry[givenLine], df)
     
-    # Now add features to the dataframe
-    # self.df = self.AddFeature_Diphthong(self.df)
-    # self.df = self.AddFeature_Speech(self.df)
-  
-  # Returns the dataframe appended
-  def ProcessLine(self, givenLine, df):
+      # Store df for later use
+      self.df = df
 
+    def Process_line(self, givenLine, df):
+      """Processes a given XML pedecerto line. Puts syllable and length in a dataframe.
+
+      Args:
+          givenLine (xml): pedecerto xml encoding of a line of poetry
+          df (dataframe): to store the data in
+
+      Returns:
+          dataframe: with syllables and their lenght (and some other information)
+      """      
     current_line = givenLine['name']
 
     # Parse every word and add its features
@@ -88,7 +72,7 @@ class Pedecerto_parser:
       word_syllable_list = pedecerto._syllabify_word(w)
       # And get its scansion
       scansion = w["sy"]
-      
+  
       # Check how many syllables we have according to pedecerto
       split_scansion = [scansion[i:i+2] for i in range(0, len(scansion), 2)] # per two characters
 
@@ -97,7 +81,7 @@ class Pedecerto_parser:
 
       for i in range(len(word_syllable_list)):
         # Now we loop through the syllable list of said word and extract features
-        mySyllable = word_syllable_list[i].lower()
+        current_syllable = word_syllable_list[i].lower()
         
         # If we still have scansions available
         if number_of_scansions > 0:
@@ -105,6 +89,7 @@ class Pedecerto_parser:
           foot = split_scansion[i][0]
           feet_pos = split_scansion[i][1]
 
+          # Interpret length based on pedecerto encoding
           if feet_pos == 'A':
             length = 1
           elif feet_pos == 'T':
@@ -122,119 +107,14 @@ class Pedecerto_parser:
           feet_pos = 'NA'
           foot = 'NA'
 
+        # Keep track of performed operations
         number_of_scansions -= 1
 
         # Append to dataframe
-        newLine = {'line': current_line, 'syllable': mySyllable, 'length': length}
+        newLine = {'line': current_line, 'syllable': current_syllable, 'length': length}
         df = df.append(newLine, ignore_index=True)
 
     return df
-
-    # exit(0)
-
-    # all_syllables = syllabify_line(givenLine)
-    # # Flatten list (hack)
-    # all_syllables = [item for sublist in all_syllables for item in sublist]
-
-    # words = givenLine.find_all('word')
-
-    # line = givenLine['name']
-
-    # length_list = []
-
-    # for word in words:
-      
-    #   # word_syllabified = syllabify_line(word.string)
-
-    #   # print(word_syllabified)
-
-
-    #   # We now want to split every syllable to match its scansion.
-    #   scansion = word['sy']
-    #   current_word = word.string
-    #   # print(item)
-    #   n = 2
-    #   # print('syllable', [item[i:i+n] for i in range(0, len(item), n)])
-    #   split_scansion = [scansion[i:i+n] for i in range(0, len(scansion), n)] # per two characters
-
-    #   print(split_scansion, len(split_scansion))
-      
-    #   for syllable in all_syllables:
-    #     if syllable in current_word:
-    #       print(syllable, current_word)
-    #       exit(0)
-
-    #   exit(0)
-
-    #   length_list.extend(myScansions)
-
-    # print(all_syllables, len(all_syllables))
-    # print(length_list, len(length_list))
-
-    # if len(all_syllables) == len(length_list):
-    #   for i in range(len(all_syllables)):
-
-    #     foot = length_list[i][0]
-    #     feet_pos = length_list[i][1]
-    #     mySyllable = all_syllables[i].lower()
-
-    #     if feet_pos == 'A':
-    #       length = 1
-    #     elif feet_pos == 'T':
-    #       length = 1
-    #     elif feet_pos == 'b':
-    #       length = 0
-    #     elif feet_pos == 'c':
-    #       length = 0
-    #     elif feet_pos == '':
-    #       length = -1        
-
-    #     print(all_syllables[i], length_list[i], length)
-
-    #     newLine = {'author': self.author, 'text': self.title, 'line': line, 'syllable': mySyllable, 'foot': foot, 'feet_pos': feet_pos, 
-    #       'length': length}
-    #     df = df.append(newLine, ignore_index=True)
-
-
-    # else:
-    #   raise ValueError("Length mismatch!")
-
-        # Now, fill the dataframe: TODO: split length in foot and length
-
-    # exit(0)
-      # exit(0)
-
-      # for i in range(len(mySyllables)):
-      #   mySyllable = mySyllables[i]
-      #   # To remove punctuation.
-      #   mySyllable = mySyllable.translate(str.maketrans('', '', string.punctuation))
-
-
-      #   try:
-      #     myScansion = myScansions[i]
-      #     foot = myScansion[0]
-      #     feet_pos = myScansion[1]
-        
-      #   if feet_pos == 'A':
-      #     length = 1
-      #   elif feet_pos == 'T':
-      #     length = 1
-      #   elif feet_pos == 'b':
-      #     length = 0
-      #   elif feet_pos == 'c':
-      #     length = 0
-      #   elif feet_pos == '':
-      #     length = -1
-      #   else:
-      #     print('Error occured determining feet_pos of syllable')
-
-
-        
-        # # newLine = {'author': self.author, 'text': self.title, 'line': line, 'syllable': mySyllable, 'foot': foot, 'feet_pos': feet_pos, 
-        # #   'length': length, 'word_boundary': myWb, 'metrical_feature': myMf2}        
-        
-
-    # return df
 
 # UNUSED FUNCTIONS (for now)
   # def AddFeature_Speech(self, df):

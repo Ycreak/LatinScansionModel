@@ -1,15 +1,16 @@
-#       ___       ___           ___     
-#      /\__\     /\  \         /\__\    
-#     /:/  /    /::\  \       /::|  |   
-#    /:/  /    /:/\ \  \     /:|:|  |   
-#   /:/  /    _\:\~\ \  \   /:/|:|__|__ 
-#  /:/__/    /\ \:\ \ \__\ /:/ |::::\__\
-#  \:\  \    \:\ \:\ \/__/ \/__/~~/:/  /
-#   \:\  \    \:\ \:\__\         /:/  / 
-#    \:\  \    \:\/:/  /        /:/  /  
-#     \:\__\    \::/  /        /:/  /   
-#      \/__/     \/__/         \/__/    
-
+'''
+       ___       ___           ___     
+      /\__\     /\  \         /\__\    
+     /:/  /    /::\  \       /::|  |   
+    /:/  /    /:/\ \  \     /:|:|  |   
+   /:/  /    _\:\~\ \  \   /:/|:|__|__ 
+  /:/__/    /\ \:\ \ \__\ /:/ |::::\__\
+  \:\  \    \:\ \:\ \/__/ \/__/~~/:/  /
+   \:\  \    \:\ \:\__\         /:/  / 
+    \:\  \    \:\/:/  /        /:/  /  
+     \:\__\    \::/  /        /:/  /   
+      \/__/     \/__/         \/__/    
+'''
 # Latin Scansion Model
 # Philippe Bors and Luuk Nolden
 # Leiden University 2021
@@ -18,6 +19,7 @@
 import configparser
 import pandas as pd
 import numpy as np
+
 # Class Imports
 from word2vec.word2vec import Word_vector_creator 
 from preprocessor.preprocessor import Text_preprocessor 
@@ -30,27 +32,27 @@ import neural_network.main as nn
 # MAIN #
 ########
 
-# Temp params
-run_preprocessor = False
+# Parameters to run each step
+run_preprocessor = True
 run_pedecerto = False
 run_model_generator = False
 add_embeddings_to_df = False
-run_neural_network = True
+run_neural_network = False
 
 # Read the config file for later use
 cf = configparser.ConfigParser()
 cf.read("config.ini")
 
-# Run the preprocessor on the given text if needed.
-# This reads the text, cleans it and returns a list of syllables for now
-# To achieve this, the pedecerto tool is used
+''' Run the preprocessor on the given text if needed.
+This reads the text, cleans it and returns a list of syllables for now
+To achieve this, the pedecerto tool is used
+'''
 if run_preprocessor:
     preprocessor = Text_preprocessor(cf.get('Text', 'name'))
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'), preprocessor.character_list)
 
 # Load the preprocessed text
 character_list = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'))
-
 
 ''' Now create a dataframe. Containing: syllable, length, vector.
 '''
@@ -70,6 +72,7 @@ if run_model_generator:
 # Load the saved/created model
 word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
 
+# Add the embeddings created by word2vec to the dataframe
 if add_embeddings_to_df:
 
     df = pedecerto_df
@@ -85,6 +88,7 @@ if add_embeddings_to_df:
 
     df.to_csv(cf.get('Pickle', 'embedding_df'), index = False, header=True)
 
+# Provide the neural network with the dataframe
 if run_neural_network:
     
     df = pd.read_csv(cf.get('Pickle', 'embedding_df'), sep=',')

@@ -19,6 +19,7 @@ def Add_padding(df, cf):
     max_length_sentence = cf.getint('NeuralNetwork', 'max_length')
 
     # This is so very C++, it hurts. #FIXME: to fix this, we need a column BOOK or TEXT to distinguish between the different line 1 and line 2 etc.
+    # However, this is not the same for every text, thus the reason for this approach.
     for i in range(len(df)):
         current_line = df["line"][i]
 
@@ -64,13 +65,14 @@ def Start_neural_network(df):
     add_padding = False
     prepare_for_network = True
 
+    # This functions add padding to every line
     if add_padding:
         df = Add_padding(df, cf)
 
     df = pd.read_csv(cf.get('Pickle', 'training_set'), sep=',')
 
-
-
+    # This abomination puts each line in a single dataframe row
+    # Now the vectors and lengths are both put into their own list, divided into two columns in the df.
     if prepare_for_network:
 
         column_names = ["vector", "target"]

@@ -12,10 +12,7 @@ class Word_vector_creator:
         Returns:
             object: gensim word2vec model
         """
-
-
-        self.model = self.Generate_Word2Vec_model(list, vector_size, window_size)
-                
+        self.model = self.Generate_Word2Vec_model(list, vector_size, window_size)              
 
     def Generate_Word2Vec_model(self, vector_list, vector_size, window_size):
         """Returns Word2Vec model generated from the given text-list
