@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 # from cltk.stem.latin.syllabifier import Syllabifier
-from cltk.prosody.latin.syllabifier import Syllabifier
+# from cltk.prosody.latin.syllabifier import Syllabifier
 
 import pandas as pd
 import string

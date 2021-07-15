@@ -2,10 +2,10 @@ import re
 
 # CLTK related
 import cltk
-from cltk.ir.query import search_corpus
-from cltk.corpus.utils.importer import CorpusImporter
-from cltk.corpus.readers import get_corpus_reader
-from cltk.stem.latin.syllabifier import Syllabifier
+# from cltk.ir.query import search_corpus
+# from cltk.corpus.utils.importer import CorpusImporter
+# from cltk.corpus.readers import get_corpus_reader
+# from cltk.stem.latin.syllabifier import Syllabifier
 
 from pedecerto.rhyme import *
 
@@ -24,9 +24,11 @@ class Text_preprocessor:
 
         for file in file_list: 
 
+            full_file = './texts/' + file
+
             word_list = []
             # TODO: find a good way to append multiple texts (for sake of word embeddings)
-            with open(file) as fh:
+            with open(full_file) as fh:
                 # Use beautiful soup to process the xml
                 soupedEntry = BeautifulSoup(fh,"xml")
                 # Take only line entries approved by pedecerto #FIXME: this might skew results

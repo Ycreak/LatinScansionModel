@@ -1,2 +1,6 @@
 gensim
 configparser
+cltk
+keras
+tensorflow
+matplotlib
