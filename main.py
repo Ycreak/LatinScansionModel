@@ -26,18 +26,18 @@ from preprocessor.preprocessor import Text_preprocessor
 import utilities as util
 from pedecerto.parser import Pedecerto_parser
 
-import neural_network.main as nn
+import neural_network.parser as nn
 
 ########
 # MAIN #
 ########
 
 # Parameters to run each step
-run_preprocessor = True
+run_preprocessor = False
 run_pedecerto = False
 run_model_generator = False
 add_embeddings_to_df = False
-run_neural_network = False
+run_neural_network = True
 
 # Read the config file for later use
 cf = configparser.ConfigParser()
@@ -62,6 +62,9 @@ if run_pedecerto:
     parse.df.to_csv(cf.get('Pickle', 'pedecerto_df'), index = False, header=True)
 
 pedecerto_df = pd.read_csv(cf.get('Pickle', 'pedecerto_df'), sep=',')
+# print(pedecerto_df)
+
+# exit(0)
 
 # Run the model generator on the given list if needed
 if run_model_generator:
