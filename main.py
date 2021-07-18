@@ -99,5 +99,6 @@ if run_neural_network:
     df = pd.read_csv(cf.get('Pickle', 'embedding_df'), sep=',')
     
     X, y = nn.load_data(df, use_file=False) # Either by finalizing parsing or by files
-    print(X)
-    print(y)
+
+    print("Training data: shape={}".format(X.shape))
+    print("Training target data: shape={}".format(y.shape))
