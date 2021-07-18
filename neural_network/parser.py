@@ -98,9 +98,9 @@ def Turn_df_into_neural_readable(df):
 def load_data(df, use_file=False):
     if use_file:
         with open('./pickle/X.npy', 'rb') as f:
-            X = np.load(f)
+            X = np.load(f, allow_pickle=True)
         with open('./pickle/y.npy', 'rb') as f:
-            y = np.load(f)
+            y = np.load(f, allow_pickle=True)
         return X, y
     
     # Read the config file for later use
