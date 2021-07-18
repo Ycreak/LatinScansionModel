@@ -60,15 +60,10 @@ def Turn_df_into_neural_readable(df):
     column_names = ["vector", "target"]
     nn_df = pd.DataFrame(columns = column_names) 
 
-    # df = df.head(100)
-
     previous_line = 1
-    counter = 0
     same_line = True
     vector_list = []
     target_list = []
-
-    print(df)
 
     for i in range(len(df)):
         # This is not DRY
@@ -84,13 +79,8 @@ def Turn_df_into_neural_readable(df):
             vector_list.append(df['vector'][i])
             target_list.append(df['length'][i])
 
-            # print(vector_list)
-
         else:
-            # print(vector_list)
-
             vector_list.extend(target_list)
-            # result_list = vector_list
 
             new_line = {'vector': vector_list, 'target': target_list}
             nn_df = nn_df.append(new_line, ignore_index=True)
@@ -103,17 +93,21 @@ def Turn_df_into_neural_readable(df):
 
         previous_line = current_line
 
-
     return(nn_df)
 
-def Start_neural_network(df):
-
+def load_data(df, use_file=False):
+    if use_file:
+        with open('./pickle/X.npy', 'rb') as f:
+            X = np.load(f)
+        with open('./pickle/y.npy', 'rb') as f:
+            y = np.load(f)
+        return X, y
+    
     # Read the config file for later use
     cf = configparser.ConfigParser()
     cf.read("config.ini")
     
     add_padding = False
-    prepare_for_network = True
 
     # This functions add padding to every line
     if add_padding:
@@ -123,13 +117,41 @@ def Start_neural_network(df):
 
     # This abomination puts each line in a single dataframe row
     # Now the vectors and lengths are both put into their own list, divided into two columns in the df.
-    if prepare_for_network:
 
-        df = Turn_df_into_neural_readable(df)
-        print(df)
 
-        df.to_csv(cf.get('Pickle', 'neural_set'), index = False, header=False)
+    df = Turn_df_into_neural_readable(df)
 
+    y = list()
+    for _, row in df.iterrows():
+        y.append(row['target'])
+    y = np.array(y, dtype=np.float)
+
+    X = list()
+    for _, row in df.iterrows():
+        X.append(row['vector'])
+    
+    for i, s in enumerate(X):
+        for i2, svalue in enumerate(s):
+            if isinstance(svalue, str):
+                X[i][i2] = svalue.replace("[", "")
+                X[i][i2] = X[i][i2].replace("]", "")
+                X[i][i2] = X[i][i2].replace("\'", "")
+                X[i][i2] = X[i][i2].replace("\n", "")
+                X[i][i2] = X[i][i2].replace("\\", "")
+                X[i][i2] = X[i][i2].replace("n", "")
+                X[i][i2] = X[i][i2].split()
+                X[i][i2] = np.array([float(f) for f in X[i][i2]], dtype=np.float) # This is not the solution, we should not lose precision
+            else:
+                pass
+        while not isinstance(X[i][-1], np.ndarray):
+            X[i].pop() # remove targets (not needed anymore)
+
+    X = np.array(X)
+    with open('./pickle/X.npy', 'wb') as f:
+        np.save(f, X)
+    with open('./pickle/y.npy', 'wb') as f:
+        np.save(f, y)
+    return X, y
 
 
 
