@@ -6,6 +6,8 @@ from numpy import loadtxt
 from keras.models import Sequential
 from keras.layers import Dense
 
+import utilities as util
+
 def Add_padding(df, cf):
     
     column_names = ["line", "syllable", "length", "vector"]
@@ -112,7 +114,6 @@ def load_data(df, use_file=False):
     # This functions add padding to every line
     if add_padding:
         df = Add_padding(df, cf)
-
     df = pd.read_csv(cf.get('Pickle', 'training_set'), sep=',')
 
     # This abomination puts each line in a single dataframe row
