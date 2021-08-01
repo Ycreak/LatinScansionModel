@@ -4,6 +4,7 @@ import pandas as pd
 import string
 import os
 import timeit
+from progress.bar import Bar
 
 import utilities as util
 
@@ -40,9 +41,11 @@ class Pedecerto_parser:
 
         if givenLine == -1: #FIXME: deprecated
           # Do the entire folder
-          for line in range(len(soupedEntry)):
-            progress_percentage = round(line / len(soupedEntry) * 100 ,2)
-            print('Progress on {0}, {1}: line {2} of {3} processed: {4}%'.format(self.author, self.title, line, len(soupedEntry), progress_percentage))
+          # for line in range(len(soupedEntry)):
+          for line in Bar('Processing {0},{1}'.format(self.author, self.title)).iter(range(len(soupedEntry))):
+            # progress_percentage = round(line / len(soupedEntry) * 100 ,2)
+            # print('Progress on {0}, {1}: line {2} of {3} processed: {4}%'.format(self.author, self.title, line, len(soupedEntry), progress_percentage))
+
             # Process the entry. It will append the line to the df
             line_df = self.Process_line(soupedEntry[line])
             df = df.append(line_df, ignore_index=True)

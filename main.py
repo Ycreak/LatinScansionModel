@@ -19,6 +19,7 @@
 import configparser
 import pandas as pd
 import numpy as np
+from progress.bar import Bar
 
 # Class Imports
 from word2vec import Word_vector_creator 
@@ -35,8 +36,8 @@ import utilities as util
 # Parameters to run each step
 run_preprocessor = False
 run_pedecerto = True
-run_model_generator = False
-add_embeddings_to_df = False
+run_model_generator = True
+add_embeddings_to_df = True
 run_neural_network = False
 
 use_file = False # Set to true if you want to use the X and y files present in the pickle dir
@@ -62,10 +63,7 @@ character_list = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'ch
 if run_pedecerto:
     print('Running pedecerto parser')
     parse = Pedecerto_parser(cf.get('Pedecerto', 'path_texts'), -1)  
-
-    exit(0)
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'), parse.df)
-    # parse.df.to_csv(cf.get('Pickle', 'pedecerto_df'), index = False, header=True) #FIXME: save to pickle
 
 pedecerto_df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'))
 
@@ -86,7 +84,8 @@ if add_embeddings_to_df:
     
     # Add syllable vectors to the dataframe using the word2vec model
     df['vector'] = df['syllable']
-    for i in range(len(df)):
+    # for i in range(len(df)):
+    for i in Bar('Processing').iter(range(len(df))): # This is a very nice progress bar I like very much
         try:
             syllable = df["syllable"][i]
             df["vector"][i] = word2vec_model.wv[syllable]
@@ -101,9 +100,11 @@ if run_neural_network:
     print('Running the neural network generation')
 
     df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'))
-    nn = Neural_network_handler(df, use_file=False)  
+    print(df)
 
     exit(0)
+    nn = Neural_network_handler(df, use_file=False)  
+
 
 
 
