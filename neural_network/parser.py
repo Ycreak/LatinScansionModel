@@ -11,8 +11,17 @@ from tensorflow.keras import layers
 
 import utilities as util
 
-def Add_padding(df, cf):
-    
+def Add_padding(df, cf): #FIXME: cf should be passed in a better way
+    """Adds padding vectors to each sentence to give the neural network a constant length per sentence.
+    For example, if a sentence has 12 syllables, 8 padding vectors will be added.
+
+    Args:
+        df (dataframe): contains sentences to be padded
+        cf (config): FIXME: needs to be passed better
+
+    Returns:
+        df: with padded sentences
+    """    
     column_names = ["line", "syllable", "length", "vector"]
     new_df = pd.DataFrame(columns = column_names) 
     
@@ -80,12 +89,25 @@ def Turn_df_into_neural_readable(df):
             same_line = False
 
         if same_line:
-            # We are working in the same line!            
+            # We are working in the same line!   
+             
+            print(type(df['vector'][i]))
+            # print(df['vector'][i].to_numpy())
+
+            # exit(0)
+            print(np.fromstring(df['vector'][i], dtype=float))
+
+            # print(df['vector'][i].flatten())
+            exit(0)
+                      
             vector_list.append(df['vector'][i]) # Create a list of the vectors
             target_list.append(df['length'][i]) # Create a list of the targets
 
         else:
             # vector_list.extend(target_list) #FIXME: removed this issue.
+
+            # print(vector_list.flatten())
+            # exit(0)
 
             new_line = {'vector': vector_list, 'target': target_list}
             nn_df = nn_df.append(new_line, ignore_index=True)
