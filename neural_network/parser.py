@@ -81,11 +81,11 @@ def Turn_df_into_neural_readable(df):
 
         if same_line:
             # We are working in the same line!            
-            vector_list.append(df['vector'][i])
-            target_list.append(df['length'][i])
+            vector_list.append(df['vector'][i]) # Create a list of the vectors
+            target_list.append(df['length'][i]) # Create a list of the targets
 
         else:
-            vector_list.extend(target_list)
+            # vector_list.extend(target_list) #FIXME: removed this issue.
 
             new_line = {'vector': vector_list, 'target': target_list}
             nn_df = nn_df.append(new_line, ignore_index=True)
@@ -113,6 +113,7 @@ def load_data(df, use_file=False):
     cf.read("config.ini")
     
     add_padding = False
+
 
     # This functions add padding to every line
     if add_padding:
