@@ -51,18 +51,18 @@ class Pedecerto_parser:
           df = self.Process_line(soupedEntry[givenLine], df)
     
       # Store df for later use
-      self.df = df
+      self.df = df #FIXME: better name. How shall we store and exchange between classes?
 
-    def Process_line(self, givenLine, df):
-      """Processes a given XML pedecerto line. Puts syllable and length in a dataframe.
+  def Process_line(self, givenLine, df):
+    """Processes a given XML pedecerto line. Puts syllable and length in a dataframe.
 
-      Args:
-          givenLine (xml): pedecerto xml encoding of a line of poetry
-          df (dataframe): to store the data in
+    Args:
+        givenLine (xml): pedecerto xml encoding of a line of poetry
+        df (dataframe): to store the data in
 
-      Returns:
-          dataframe: with syllables and their lenght (and some other information)
-      """      
+    Returns:
+        dataframe: with syllables and their lenght (and some other information)
+    """      
     current_line = givenLine['name']
 
     # Parse every word and add its features
@@ -72,7 +72,7 @@ class Pedecerto_parser:
       word_syllable_list = pedecerto._syllabify_word(w)
       # And get its scansion
       scansion = w["sy"]
-  
+
       # Check how many syllables we have according to pedecerto
       split_scansion = [scansion[i:i+2] for i in range(0, len(scansion), 2)] # per two characters
 
