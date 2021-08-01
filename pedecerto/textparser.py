@@ -1,13 +1,11 @@
 from bs4 import BeautifulSoup
-# from cltk.stem.latin.syllabifier import Syllabifier
-# from cltk.prosody.latin.syllabifier import Syllabifier
 
 import pandas as pd
 import string
 import os
+import timeit
 
 import utilities as util
-# from bak.scansion_constants import ScansionConstants
 
 import pedecerto.rhyme as pedecerto
 
@@ -40,20 +38,23 @@ class Pedecerto_parser:
         # Clean the lines (done by MQDQ)
         soupedEntry = util.clean(soupedEntry('line'))
 
-        if givenLine == -1:
+        if givenLine == -1: #FIXME: deprecated
           # Do the entire folder
           for line in range(len(soupedEntry)):
-            print('Progress on', self.author, self.title, ':', round(line / len(soupedEntry) * 100, 2), "%")
+            print('Progress on {0}, {1}: line {2} of {3} processed.'.format(self.author, self.title, line, len(soupedEntry)))
+            # print('############################################')
             # Process the entry. It will append the line to the df
-            df = self.Process_line(soupedEntry[line], df)
+            new_line = self.Process_line(soupedEntry[line])
+            df = df.append(new_line, ignore_index=True)
+
         else:
           # Process just the given line (testing purposes).
-          df = self.Process_line(soupedEntry[givenLine], df)
-    
+          # df = self.Process_line(soupedEntry[givenLine], df)
+          pass
       # Store df for later use
       self.df = df #FIXME: better name. How shall we store and exchange between classes?
 
-  def Process_line(self, givenLine, df):
+  def Process_line(self, givenLine):
     """Processes a given XML pedecerto line. Puts syllable and length in a dataframe.
 
     Args:
@@ -70,6 +71,7 @@ class Pedecerto_parser:
       
       # Now for every word, syllabify it first
       word_syllable_list = pedecerto._syllabify_word(w)
+
       # And get its scansion
       scansion = w["sy"]
 
@@ -112,9 +114,8 @@ class Pedecerto_parser:
 
         # Append to dataframe
         newLine = {'line': current_line, 'syllable': current_syllable, 'length': length}
-        df = df.append(newLine, ignore_index=True)
 
-    return df
+    return newLine
 
 # UNUSED FUNCTIONS (for now)
   # def AddFeature_Speech(self, df):

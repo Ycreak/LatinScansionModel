@@ -23,12 +23,10 @@ import numpy as np
 # Class Imports
 from word2vec import Word_vector_creator 
 from preprocessor import Text_preprocessor 
-from pedecerto.parser import Pedecerto_parser #FIXME: needs a nice rename
+from pedecerto.textparser import Pedecerto_parser #FIXME: needs a nice rename
+from neuralnetwork import Neural_network_handler
 
 import utilities as util
-
-from neuralnetwork import Neural_network_handler
-# import neural_network.parser as nn
 
 ########
 # MAIN #
@@ -36,9 +34,9 @@ from neuralnetwork import Neural_network_handler
 
 # Parameters to run each step
 run_preprocessor = False
-run_pedecerto = False
-run_model_generator = True
-add_embeddings_to_df = True
+run_pedecerto = True
+run_model_generator = False
+add_embeddings_to_df = False
 run_neural_network = False
 
 use_file = False # Set to true if you want to use the X and y files present in the pickle dir
@@ -52,6 +50,7 @@ This reads the text, cleans it and returns a list of syllables for now
 To achieve this, the pedecerto tool is used
 '''
 if run_preprocessor:
+    print('Running preprocessor')
     preprocessor = Text_preprocessor(cf.get('Text', 'name'))
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'), preprocessor.character_list)
 
@@ -61,18 +60,18 @@ character_list = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'ch
 ''' Now create a dataframe. Containing: syllable, length, vector.
 '''
 if run_pedecerto:
-
+    print('Running pedecerto parser')
     parse = Pedecerto_parser(cf.get('Pedecerto', 'path_texts'), -1)  
+
+    exit(0)
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'), parse.df)
     # parse.df.to_csv(cf.get('Pickle', 'pedecerto_df'), index = False, header=True) #FIXME: save to pickle
 
 pedecerto_df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'))
-print(pedecerto_df)
-
-# exit(0)
 
 # Run the model generator on the given list if needed
 if run_model_generator:
+    print('Running Word2Vec model generator')
     # Create a word2vec model from the provided character list
     word2vec_creator = Word_vector_creator(character_list, cf.getint('Word2Vec', 'vector_size'), cf.getint('Word2Vec', 'window_size'))
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'), word2vec_creator.model)
@@ -82,7 +81,7 @@ word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'wo
 
 # Add the embeddings created by word2vec to the dataframe
 if add_embeddings_to_df:
-
+    print('Adding embeddings to the dataframe')
     df = pedecerto_df
     
     # Add syllable vectors to the dataframe using the word2vec model
@@ -99,9 +98,9 @@ if add_embeddings_to_df:
 
 # Provide the neural network with the dataframe
 if run_neural_network:
-    
+    print('Running the neural network generation')
+
     df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'))
-    
     nn = Neural_network_handler(df, use_file=False)  
 
     exit(0)
