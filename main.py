@@ -35,16 +35,18 @@ import utilities as util
 
 # Parameters to run each step
 run_preprocessor = False
-run_pedecerto = True
-run_model_generator = True
-add_embeddings_to_df = True
-run_neural_network = False
+run_pedecerto = False
+run_model_generator = False
+add_embeddings_to_df = False
+run_neural_network = True
 
 use_file = False # Set to true if you want to use the X and y files present in the pickle dir
 
 # Read the config file for later use
 cf = configparser.ConfigParser()
 cf.read("config.ini")
+
+print('\n')
 
 ''' Run the preprocessor on the given text if needed.
 This reads the text, cleans it and returns a list of syllables for now
@@ -100,9 +102,7 @@ if run_neural_network:
     print('Running the neural network generation')
 
     df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'))
-    print(df)
 
-    exit(0)
     nn = Neural_network_handler(df, use_file=False)  
 
 
