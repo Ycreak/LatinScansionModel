@@ -30,7 +30,7 @@ class Neural_network_handler:
 
         add_padding = False
         make_neural_readable = False
-        flatten_vector = True
+        flatten_vector = False
 
         # This functions add padding to every line
         if add_padding:
