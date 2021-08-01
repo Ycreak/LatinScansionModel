@@ -34,10 +34,10 @@ import neural_network.parser as nn
 
 # Parameters to run each step
 run_preprocessor = False
-run_pedecerto = False
+run_pedecerto = True
 run_model_generator = False
 add_embeddings_to_df = False
-run_neural_network = True
+run_neural_network = False
 
 use_file = False # Set to true if you want to use the X and y files present in the pickle dir
 
@@ -61,10 +61,11 @@ character_list = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'ch
 if run_pedecerto:
 
     parse = Pedecerto_parser(cf.get('Pedecerto', 'path_texts'), -1)  
-    parse.df.to_csv(cf.get('Pickle', 'pedecerto_df'), index = False, header=True)
+    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'), parse.df)
+    # parse.df.to_csv(cf.get('Pickle', 'pedecerto_df'), index = False, header=True) #FIXME: save to pickle
 
-pedecerto_df = pd.read_csv(cf.get('Pickle', 'pedecerto_df'), sep=',')
-# print(pedecerto_df)
+pedecerto_df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'))
+print(pedecerto_df)
 
 # exit(0)
 
@@ -91,18 +92,21 @@ if add_embeddings_to_df:
         except:
             IndexError('Syllable has no embedding yet.')
 
-    df.to_csv(cf.get('Pickle', 'embedding_df'), index = False, header=True)
+    # df.to_csv(cf.get('Pickle', 'embedding_df'), index = False, header=True) #FIXME: save to pickle
+    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'), df)
 
 # Provide the neural network with the dataframe
 if run_neural_network:
     
-    df = pd.read_csv(cf.get('Pickle', 'embedding_df'), sep=',')
+    df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'))
     
-    X, y = nn.load_data(df, use_file=True) # Either by finalizing parsing or by files
+    X, y = nn.load_data(df, use_file=False) # Either by finalizing parsing or by files
 
 
     print("Training data: shape={}".format(X.shape))
     print("Training target data: shape={}".format(y.shape))
+
+    exit(0)
 
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import Dense
