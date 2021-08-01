@@ -41,12 +41,12 @@ class Pedecerto_parser:
         if givenLine == -1: #FIXME: deprecated
           # Do the entire folder
           for line in range(len(soupedEntry)):
-            print('Progress on {0}, {1}: line {2} of {3} processed.'.format(self.author, self.title, line, len(soupedEntry)))
-            # print('############################################')
+            progress_percentage = round(line / len(soupedEntry) * 100 ,2)
+            print('Progress on {0}, {1}: line {2} of {3} processed: {4}%'.format(self.author, self.title, line, len(soupedEntry), progress_percentage))
             # Process the entry. It will append the line to the df
-            new_line = self.Process_line(soupedEntry[line])
-            df = df.append(new_line, ignore_index=True)
-
+            line_df = self.Process_line(soupedEntry[line])
+            df = df.append(line_df, ignore_index=True)
+            # If I greatly improve my own code, am I a wizard, or a moron?
         else:
           # Process just the given line (testing purposes).
           # df = self.Process_line(soupedEntry[givenLine], df)
@@ -64,6 +64,9 @@ class Pedecerto_parser:
     Returns:
         dataframe: with syllables and their lenght (and some other information)
     """      
+    column_names = ["author", "text", "line", "syllable", "length"]
+    df = pd.DataFrame(columns = column_names)
+    
     current_line = givenLine['name']
 
     # Parse every word and add its features
@@ -113,9 +116,10 @@ class Pedecerto_parser:
         number_of_scansions -= 1
 
         # Append to dataframe
-        newLine = {'line': current_line, 'syllable': current_syllable, 'length': length}
+        new_line = {'line': current_line, 'syllable': current_syllable, 'length': length}
+        df = df.append(new_line, ignore_index=True)
 
-    return newLine
+    return df
 
 # UNUSED FUNCTIONS (for now)
   # def AddFeature_Speech(self, df):
