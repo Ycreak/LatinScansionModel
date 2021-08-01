@@ -1,6 +1,7 @@
 import configparser
 import pandas as pd
 import numpy as np
+from progress.bar import Bar
 
 from numpy import loadtxt
 
@@ -22,17 +23,51 @@ class Neural_network_handler:
     """This class handles everything neural network related.
     """  
 
-    def __init__(self, use_file):
+    def __init__(self, df, use_file):
         # Read the config file for later use
         self.cf = configparser.ConfigParser()
         self.cf.read("config.ini") 
 
-        X, y = nn.load_data(df, use_file=False) # Either by finalizing parsing or by files
+        add_padding = False
+        make_neural_readable = False
+        flatten_vector = True
+
+        # This functions add padding to every line
+        if add_padding:
+            print('Adding padding')
+            df = self.Add_padding(df)
+            util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'padded_set'), df)
+
+        df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'padded_set'))
+
+        if make_neural_readable:
+            # This abomination puts each line in a single dataframe row
+            # Now the vectors and lengths are both put into their own list, divided into two columns in the df.
+            print("Creating vector-target dataframe")
+            df = self.Turn_df_into_neural_readable(df)
+            util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'neural_readable'), df)
+        df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'neural_readable'))
+
+        
+        if flatten_vector:
+            df = self.Flatten_vector(df)
+            util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'), df)
+        df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'))
+
+        ####
+        # TODO: Philippe plz continue here
+        ####
+
+        exit(0)
+
+
+
+        X, y = self.load_data(df, use_file=False) # Either by finalizing parsing or by files
 
         print("Training data: shape={}".format(X.shape))
         print("Training target data: shape={}".format(y.shape))
 
-        exit(0)
+        exit(0) # This is for the neural network itself. Might need to be a separate function
 
         # Split test and train set
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
@@ -56,6 +91,17 @@ class Neural_network_handler:
         print('Accuracy (testing): %.2f' % (test_accuracy * 100))
 
 
+    def Flatten_vector(self, df):
+
+        for i in range(len(df)): # For debugging    
+            # print(df["vector"][i])
+            
+            array = np.array(df["vector"][i]).flatten().tolist()
+            df["vector"][i] = array
+
+        return df
+
+
     def Add_padding(self, df): 
         """Adds padding vectors to each sentence to give the neural network a constant length per sentence.
         For example, if a sentence has 12 syllables, 8 padding vectors will be added.
@@ -72,21 +118,17 @@ class Neural_network_handler:
         # Loop through the the lines and their vectors
         previous_line = 1
         counter = 0
-        same_line = True
+        # same_line = True
         zero_vector = np.zeros(self.cf.getint('Word2Vec', 'vector_size'))
         max_length_sentence = self.cf.getint('NeuralNetwork', 'max_length')
 
         # This is so very C++, it hurts. #FIXME: to fix this, we need a column BOOK or TEXT to distinguish between the different line 1 and line 2 etc.
         # However, this is not the same for every text, thus the reason for this approach.
-        for i in range(len(df)):
-            current_line = df["line"][i]
+        for i in Bar('Processing').iter(range(len(df))):
+        # for i in range(len(df)): # For debugging    
+            current_line = int(df["line"][i]) # Of course, pandas saves my integer as a string
 
             if current_line == previous_line:
-                same_line = True
-            else:
-                same_line = False
-
-            if same_line:
                 # We are working in the same line!            
                 new_line = {'line': current_line, 'syllable': df["syllable"][i], 'length': df["length"][i], 'vector': df["vector"][i]}
                 new_df = new_df.append(new_line, ignore_index=True)
@@ -108,11 +150,6 @@ class Neural_network_handler:
             # Update current line
             previous_line = current_line
             
-        print(new_df)    
-        
-        # new_df.to_csv(self.cf.get('Pickle', 'training_set'), index = False, header=True)
-        util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'training_set'), new_df)
-
         return new_df
 
     def Turn_df_into_neural_readable(self, df):
@@ -124,7 +161,8 @@ class Neural_network_handler:
         vector_list = []
         target_list = []
 
-        for i in range(len(df)):
+        # for i in range(len(df)):
+        for i in Bar('Processing').iter(range(len(df))):
             # This is not DRY
             current_line = df["line"][i]
 
@@ -134,26 +172,11 @@ class Neural_network_handler:
                 same_line = False
 
             if same_line:
-                # We are working in the same line!   
-                
-                # print(type(df['vector'][i]))  FIXME: flatten list here?
-                # # print(df['vector'][i].to_numpy())
-
-                # # exit(0)
-                # print(np.fromstring(df['vector'][i], dtype=float))
-
-                # # print(df['vector'][i].flatten())
-                # exit(0)
-                        
+                # We are working in the same line!                         
                 vector_list.append(df['vector'][i]) # Create a list of the vectors
                 target_list.append(df['length'][i]) # Create a list of the targets
 
             else:
-                # vector_list.extend(target_list) #FIXME: removed this issue.
-
-                # print(vector_list.flatten())
-                # exit(0)
-
                 new_line = {'vector': vector_list, 'target': target_list}
                 nn_df = nn_df.append(new_line, ignore_index=True)
 
@@ -174,23 +197,6 @@ class Neural_network_handler:
             with open('./pickle/y.npy', 'rb') as f:
                 y = np.load(f, allow_pickle=True)
             return X, y
-
-        
-        add_padding = False
-
-
-        # This functions add padding to every line
-        if add_padding:
-            print('Adding padding')
-            df = Add_padding(df)
-        df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'training_set'))
-        # pd.read_csv(self.cf.get('Pickle', 'training_set'), sep=',')
-
-        # This abomination puts each line in a single dataframe row
-        # Now the vectors and lengths are both put into their own list, divided into two columns in the df.
-
-        print("Creating vector-target dataframe")
-        df = Turn_df_into_neural_readable(df)
 
         y = list()
         for _, row in df.iterrows():
