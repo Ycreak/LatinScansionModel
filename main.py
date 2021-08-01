@@ -21,12 +21,13 @@ import pandas as pd
 import numpy as np
 
 # Class Imports
-from word2vec.word2vec import Word_vector_creator 
-from preprocessor.preprocessor import Text_preprocessor 
-import utilities as util
-from pedecerto.parser import Pedecerto_parser
+from word2vec import Word_vector_creator 
+from preprocessor import Text_preprocessor 
+from pedecerto.parser import Pedecerto_parser #FIXME: needs a nice rename
 
-from neuralnetwork.handler import Neural_network_handler
+import utilities as util
+
+from neuralnetwork import Neural_network_handler
 # import neural_network.parser as nn
 
 ########
