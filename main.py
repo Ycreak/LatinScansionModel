@@ -98,7 +98,58 @@ if run_neural_network:
     
     df = pd.read_csv(cf.get('Pickle', 'embedding_df'), sep=',')
     
-    X, y = nn.load_data(df, use_file=False) # Either by finalizing parsing or by files
+    X, y = nn.load_data(df, use_file=True) # Either by finalizing parsing or by files
+
 
     print("Training data: shape={}".format(X.shape))
     print("Training target data: shape={}".format(y.shape))
+
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Dense
+    from matplotlib import pyplot
+
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import MinMaxScaler
+
+    HIDDEN_SIZE = 256
+
+    def create_model(X_train, y_train):
+        """Create a neural network with two hidden layers,
+             Dependent on the sizes of the training data
+
+        Args:
+            X_train (array): .
+            y_train (array): .
+
+        Returns:
+            ...
+        """    
+        model = Sequential()
+        model.add(Dense(HIDDEN_SIZE, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(HIDDEN_SIZE, activation='relu'))
+        model.add(Dense(y_train.shape[1], activation='sigmoid'))
+        model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+        return model
+
+    # Split test and train set
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+    # Scale data
+    #scaler = MinMaxScaler()
+    #X_train = scaler.fit_transform(X_train)
+    #X_test = scaler.transform(X_test)
+
+    # Create the model
+    model = create_model(X_train, y_train)
+
+    # # Train
+    history = model.fit(X_train, y_train, epochs=80, batch_size=1, validation_data=(X_test, y_test), shuffle=True)
+
+
+    _, train_accuracy = model.evaluate(X_train, y_train)
+    _, test_accuracy = model.evaluate(X_test, y_test)
+
+    print('Accuracy (training): %.2f' % (train_accuracy * 100))
+    print('Accuracy (testing): %.2f' % (test_accuracy * 100))
+
+

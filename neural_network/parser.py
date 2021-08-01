@@ -3,8 +3,11 @@ import pandas as pd
 import numpy as np
 
 from numpy import loadtxt
-from keras.models import Sequential
-from keras.layers import Dense
+
+from tensorflow.keras import models
+from tensorflow.keras import layers
+# from keras.models import Sequential
+# from keras.layers import Dense
 
 import utilities as util
 
@@ -113,13 +116,14 @@ def load_data(df, use_file=False):
 
     # This functions add padding to every line
     if add_padding:
+        print('Adding padding')
         df = Add_padding(df, cf)
     df = pd.read_csv(cf.get('Pickle', 'training_set'), sep=',')
 
     # This abomination puts each line in a single dataframe row
     # Now the vectors and lengths are both put into their own list, divided into two columns in the df.
 
-
+    print("Creating vector-target dataframe")
     df = Turn_df_into_neural_readable(df)
 
     y = list()
