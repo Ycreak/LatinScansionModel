@@ -2,7 +2,7 @@
 from gensim.models import Word2Vec
 
 class Word_vector_creator:
-    def __init__(self, list, vector_size, window_size):
+    def __init__(self, character_list, vector_size, window_size):
         """This class expects a list of characters and converts the characters into a gensim model.
         The model is then saved to disk for later use.
 
@@ -12,7 +12,7 @@ class Word_vector_creator:
         Returns:
             object: gensim word2vec model
         """
-        self.model = self.Generate_Word2Vec_model(list, vector_size, window_size)              
+        self.model = self.Generate_Word2Vec_model(character_list, vector_size, window_size)              
 
     def Generate_Word2Vec_model(self, vector_list, vector_size, window_size):
         """Returns Word2Vec model generated from the given text-list
@@ -24,5 +24,6 @@ class Word_vector_creator:
 
         Returns:
             object: the word2vec model
-        """    
-        return Word2Vec([vector_list], vector_size=vector_size, window=window_size, min_count=1, workers=4)
+        """
+        # vector_size = vector_size should be used. Older gensim versions want size=vector_size    
+        return Word2Vec([vector_list], size=vector_size, window=window_size, min_count=1, workers=4)
