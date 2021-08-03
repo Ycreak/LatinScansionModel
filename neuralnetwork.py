@@ -58,25 +58,70 @@ class Neural_network_handler:
         # TODO: Philippe plz continue here
         ####
 
+        print(df)
+       
+        # Specify the input dimension of the network
+        _input_dim = int(self.cf.get('NeuralNetwork', 'max_length')) * int(self.cf.get('Word2Vec', 'vector_size'))
+
+        y = []
+        X = []
+
+        df.to_csv('./dataframe.csv', index = False, header=True)
+
+
+        df = df.head(98) #FIXME: in line 98 of the dataframe, the value -9.626477549318224e-05 is used.
+                            # Numpy does not like this like at all xD
+
+        for _, row in df.iterrows():
+            y.append(row['target'])
+            X.append(row['vector'])
+
+        X = np.asarray(X)
+
+        # X = np.asarray(X).astype('float32')
+
+        # y = np.asarray(y, dtype=float)
+        # X = np.asarray(X, dtype=float)
+
+        exit(0)
+        # define the keras model
+        model = Sequential()
+        model.add(Dense(12, input_dim=_input_dim, activation='relu'))
+        model.add(Dense(8, activation='relu'))
+        model.add(Dense(17, activation='sigmoid'))
+        # compile the keras model
+        model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+        # fit the keras model on the dataset
+        model.fit(X, y, epochs=150, batch_size=10)
+        # evaluate the keras model
+        _, accuracy = model.evaluate(X, y)
+        print('Accuracy: %.2f' % (accuracy*100))
+
         exit(0)
 
 
+        
 
-        X, y = self.load_data(df, use_file=False) # Either by finalizing parsing or by files
+        print(type(X), type(y))
+
+
+        # exit(0)
+
+        # X, y = self.load_data(df, use_file=False) # Either by finalizing parsing or by files
 
         print("Training data: shape={}".format(X.shape))
         print("Training target data: shape={}".format(y.shape))
 
-        exit(0) # This is for the neural network itself. Might need to be a separate function
-
         # Split test and train set
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
 
         # Scale data
         scaler = MinMaxScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
 
+        exit(0)
         # Create the model
         model = create_model(X_train, y_train)
 
