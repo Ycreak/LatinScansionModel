@@ -31,6 +31,7 @@ class Neural_network_handler:
         add_padding = False
         make_neural_readable = False
         flatten_vector = False
+        create_model = False
 
         # This functions add padding to every line
         if add_padding:
@@ -57,70 +58,63 @@ class Neural_network_handler:
         ####
         # TODO: Philippe plz continue here
         ####
-      
-        # Specify the input dimension of the network
-        _input_dim = int(self.cf.get('NeuralNetwork', 'max_length')) * int(self.cf.get('Word2Vec', 'vector_size'))
 
+        # Turn df into X and y for neural network
         print('Creating X and y')
-
-        X = []
-        y = []
-
-        X = list()
-        y = list()
-        for _, row in df.iterrows():
-            X.append(row['vector'])
-            y.append(row['target'])
-        
-        # Here I learned that tensorflow errors are unreadable. Lest we forget.
-        X = np.array(X, dtype=np.float)
-        y = np.array(y, dtype=np.float)
+        X, y = self.Create_X_y(df, use_file=False)
 
         print("Training data: shape={}".format(X.shape))
         print("Training target data: shape={}".format(y.shape))
+      
+        if create_model:
+            # Specify the input dimension of the network
+            _input_dim = int(self.cf.get('NeuralNetwork', 'max_length')) * int(self.cf.get('Word2Vec', 'vector_size'))
 
-        output_layer_size = int(self.cf.get('NeuralNetwork', 'max_length'))
+            # Neural Network parameters
+            _output_layer_size = int(self.cf.get('NeuralNetwork', 'max_length'))
+            _epochs = int(self.cf.getint('NeuralNetwork', 'epochs'))
+            _batch_size = int(self.cf.getint('NeuralNetwork', 'batch_size'))
 
-        # define the keras model
-        # model = Sequential()
-        # model.add(Dense(12, input_dim=_input_dim, activation='relu'))
-        # model.add(Dense(8, activation='relu'))
-        # model.add(Dense(output_layer_size, activation='sigmoid'))
-        # # compile the keras model
-        # model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-        # # fit the keras model on the dataset
-        # model.fit(X, y, epochs=150, batch_size=10)
-        # # evaluate the keras model
-        # _, accuracy = model.evaluate(X, y)
-        # print('Accuracy: %.2f' % (accuracy*100))
+            # Split test and train set
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-        # exit(0)
+            # Scale data #FIXME: do we need a scaler? All values are between -1 and 1.
+            # scaler = MinMaxScaler()
+            # X_train = scaler.fit_transform(X_train)
+            # X_test = scaler.transform(X_test)
 
-        # Split test and train set
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+            # Create the model #FIXME: should we put this inside a function?
+            model = Sequential()
+            model.add(Dense(12, input_dim=_input_dim, activation='relu'))
+            model.add(Dense(8, activation='relu'))
+            model.add(Dense(_output_layer_size, activation='sigmoid'))
+            # compile the keras model
+            model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+            # # Train
+            history = model.fit(X_train, y_train, epochs=_epochs, batch_size=_batch_size, 
+                                validation_data=(X_test, y_test), shuffle=True)
 
-        # Scale data
-        # scaler = MinMaxScaler()
-        # X_train = scaler.fit_transform(X_train)
-        # X_test = scaler.transform(X_test)
+            _, train_accuracy = model.evaluate(X_train, y_train)
+            _, test_accuracy = model.evaluate(X_test, y_test)
 
-        # Create the model #FIXME: TEMP
-        model = Sequential()
-        model.add(Dense(12, input_dim=_input_dim, activation='relu'))
-        model.add(Dense(8, activation='relu'))
-        model.add(Dense(output_layer_size, activation='sigmoid'))
-        # compile the keras model
-        model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+            print('Accuracy (training): %.2f' % (train_accuracy * 100))
+            print('Accuracy (testing): %.2f' % (test_accuracy * 100))
 
-        # # Train
-        history = model.fit(X_train, y_train, epochs=self.cf.getint('NeuralNetwork', 'epochs'), batch_size=self.cf.getint('NeuralNetwork', 'batch_size'), 
-            validation_data=(X_test, y_test), shuffle=True)
+            model.save('pickle/model')
+            # util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'neural_model'), history)
 
-        _, train_accuracy = model.evaluate(X_train, y_train)
-        _, test_accuracy = model.evaluate(X_test, y_test)
+        # Test the model #FIXME: only one output?
+        model = models.load_model('pickle/model')
 
-        print('Accuracy (training): %.2f' % (train_accuracy * 100))
-        print('Accuracy (testing): %.2f' % (test_accuracy * 100))
+        x_new = X[1:5]
+
+        y_new = model.predict_classes(x_new)
+
+        # print('{0} => {1} (expected {2})'.format((X[0], predictions[0], y[0])))
+        for i in range(len(x_new)):
+            # print("X=%s, Predicted=%s" % (x_new[i], y_new[i], y[i]))
+            print("X={0}, Predicted={1}, Expected={2}".format(x_new[i], y_new[i], y[i]))
+
 
 
     def Flatten_vector(self, df):
@@ -133,6 +127,24 @@ class Neural_network_handler:
 
         return df
 
+    def Create_X_y(self, df, use_file=False):
+
+        X = []
+        y = []
+
+        X = list()
+        y = list()
+        for _, row in df.iterrows():
+            X.append(row['vector'])
+            y.append(row['target'])
+        
+        # Here I learned that tensorflow errors are unreadable. Lest we forget.
+        # ValueError: setting an array element with a sequence.
+
+        X = np.array(X, dtype=np.float)
+        y = np.array(y, dtype=np.float)
+
+        return X, y
 
     def Add_padding(self, df): 
         """Adds padding vectors to each sentence to give the neural network a constant length per sentence.
