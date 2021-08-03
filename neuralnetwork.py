@@ -23,7 +23,7 @@ class Neural_network_handler:
     """This class handles everything neural network related.
     """  
 
-    def __init__(self, df, use_file):
+    def __init__(self, df):
         # Read the config file for later use
         self.cf = configparser.ConfigParser()
         self.cf.read("config.ini") 
@@ -66,29 +66,84 @@ class Neural_network_handler:
         y = []
         X = []
 
-        df.to_csv('./dataframe.csv', index = False, header=True)
 
 
-        df = df.head(98) #FIXME: in line 98 of the dataframe, the value -9.626477549318224e-05 is used.
+        # df = df.head(2) #FIXME: in line 98 of the dataframe, the value -9.626477549318224e-05 is used.
                             # Numpy does not like this like at all xD
 
+        # df.to_csv('./dataframe.csv', index = False, header=True)
+        # max_len = 0
+
+
+
+        print('Creating X and y')
+
+        y = list()
         for _, row in df.iterrows():
             y.append(row['target'])
+        
+        y = np.array(y, dtype=np.float)
+
+        X = list()
+        for _, row in df.iterrows():
             X.append(row['vector'])
 
-        X = np.asarray(X)
+        X = np.array(X, dtype=np.float)
+
+        # exit(0)
+
+        # for row in range(len(df)):
+        # # for _, row in df.iterrows():
+        #     # FIXME: Convert all items in the list to float and put the result in an numpy array
+        #     target_row_float = np.array(list(map(float, df['target'][row]))) # This is horrible
+        #     vector_row_float = np.array(list(map(float, df['vector'][row])))
+
+        #     y.append(target_row_float)
+        #     X.append(vector_row_float)
+
+            # if len(vector_row_float) > max_len:
+            #     max_len = len(vector_row_float)
+
+            # X.append([float(f) for f in row['vector']])
+
+            # print(X)
+            # y.append(row['target'])
+
+            # print(type(X))
+            # print(X)
+            # y.append(row['target'])
+            # X.append(row['vector'])
+
+
+
+        # X = np.array([float(f) for f in X], dtype=np.float) # This is not the solution, we should not lose precision
+
+        # X = np.array(X, dtype=float)
+        # X = np.array(X)
+
+
+        print(X)
+
+        # print(max_len)
+
+        # exit(0)
+
+        # X = np.asarray(X)
 
         # X = np.asarray(X).astype('float32')
 
         # y = np.asarray(y, dtype=float)
         # X = np.asarray(X, dtype=float)
+        # print("Training data: shape={}".format(X.shape))
+        # print("Training target data: shape={}".format(y.shape))
 
-        exit(0)
+        output_layer_size = int(self.cf.get('NeuralNetwork', 'max_length'))
+        # exit(0)
         # define the keras model
         model = Sequential()
         model.add(Dense(12, input_dim=_input_dim, activation='relu'))
         model.add(Dense(8, activation='relu'))
-        model.add(Dense(17, activation='sigmoid'))
+        model.add(Dense(output_layer_size, activation='sigmoid'))
         # compile the keras model
         model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
         # fit the keras model on the dataset
@@ -109,8 +164,7 @@ class Neural_network_handler:
 
         # X, y = self.load_data(df, use_file=False) # Either by finalizing parsing or by files
 
-        print("Training data: shape={}".format(X.shape))
-        print("Training target data: shape={}".format(y.shape))
+
 
         # Split test and train set
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)

@@ -40,8 +40,6 @@ run_model_generator = False
 add_embeddings_to_df = False
 run_neural_network = True
 
-use_file = False # Set to true if you want to use the X and y files present in the pickle dir
-
 # Read the config file for later use
 cf = configparser.ConfigParser()
 cf.read("config.ini")
@@ -103,7 +101,7 @@ if run_neural_network:
 
     df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'))
 
-    nn = Neural_network_handler(df, use_file=False)  
+    nn = Neural_network_handler(df)  
 
 
 
