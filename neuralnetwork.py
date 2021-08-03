@@ -57,127 +57,60 @@ class Neural_network_handler:
         ####
         # TODO: Philippe plz continue here
         ####
-
-        print(df)
-       
+      
         # Specify the input dimension of the network
         _input_dim = int(self.cf.get('NeuralNetwork', 'max_length')) * int(self.cf.get('Word2Vec', 'vector_size'))
 
-        y = []
-        X = []
-
-
-
-        # df = df.head(2) #FIXME: in line 98 of the dataframe, the value -9.626477549318224e-05 is used.
-                            # Numpy does not like this like at all xD
-
-        # df.to_csv('./dataframe.csv', index = False, header=True)
-        # max_len = 0
-
-
-
         print('Creating X and y')
 
-        y = list()
-        for _, row in df.iterrows():
-            y.append(row['target'])
-        
-        y = np.array(y, dtype=np.float)
+        X = []
+        y = []
 
         X = list()
+        y = list()
         for _, row in df.iterrows():
             X.append(row['vector'])
-
+            y.append(row['target'])
+        
+        # Here I learned that tensorflow errors are unreadable. Lest we forget.
         X = np.array(X, dtype=np.float)
+        y = np.array(y, dtype=np.float)
 
-        # exit(0)
-
-        # for row in range(len(df)):
-        # # for _, row in df.iterrows():
-        #     # FIXME: Convert all items in the list to float and put the result in an numpy array
-        #     target_row_float = np.array(list(map(float, df['target'][row]))) # This is horrible
-        #     vector_row_float = np.array(list(map(float, df['vector'][row])))
-
-        #     y.append(target_row_float)
-        #     X.append(vector_row_float)
-
-            # if len(vector_row_float) > max_len:
-            #     max_len = len(vector_row_float)
-
-            # X.append([float(f) for f in row['vector']])
-
-            # print(X)
-            # y.append(row['target'])
-
-            # print(type(X))
-            # print(X)
-            # y.append(row['target'])
-            # X.append(row['vector'])
-
-
-
-        # X = np.array([float(f) for f in X], dtype=np.float) # This is not the solution, we should not lose precision
-
-        # X = np.array(X, dtype=float)
-        # X = np.array(X)
-
-
-        print(X)
-
-        # print(max_len)
-
-        # exit(0)
-
-        # X = np.asarray(X)
-
-        # X = np.asarray(X).astype('float32')
-
-        # y = np.asarray(y, dtype=float)
-        # X = np.asarray(X, dtype=float)
-        # print("Training data: shape={}".format(X.shape))
-        # print("Training target data: shape={}".format(y.shape))
+        print("Training data: shape={}".format(X.shape))
+        print("Training target data: shape={}".format(y.shape))
 
         output_layer_size = int(self.cf.get('NeuralNetwork', 'max_length'))
-        # exit(0)
+
         # define the keras model
+        # model = Sequential()
+        # model.add(Dense(12, input_dim=_input_dim, activation='relu'))
+        # model.add(Dense(8, activation='relu'))
+        # model.add(Dense(output_layer_size, activation='sigmoid'))
+        # # compile the keras model
+        # model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+        # # fit the keras model on the dataset
+        # model.fit(X, y, epochs=150, batch_size=10)
+        # # evaluate the keras model
+        # _, accuracy = model.evaluate(X, y)
+        # print('Accuracy: %.2f' % (accuracy*100))
+
+        # exit(0)
+
+        # Split test and train set
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+        # Scale data
+        # scaler = MinMaxScaler()
+        # X_train = scaler.fit_transform(X_train)
+        # X_test = scaler.transform(X_test)
+
+        # Create the model #FIXME: TEMP
         model = Sequential()
         model.add(Dense(12, input_dim=_input_dim, activation='relu'))
         model.add(Dense(8, activation='relu'))
         model.add(Dense(output_layer_size, activation='sigmoid'))
         # compile the keras model
         model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-        # fit the keras model on the dataset
-        model.fit(X, y, epochs=150, batch_size=10)
-        # evaluate the keras model
-        _, accuracy = model.evaluate(X, y)
-        print('Accuracy: %.2f' % (accuracy*100))
-
-        exit(0)
-
-
-        
-
-        print(type(X), type(y))
-
-
-        # exit(0)
-
-        # X, y = self.load_data(df, use_file=False) # Either by finalizing parsing or by files
-
-
-
-        # Split test and train set
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-
-
-        # Scale data
-        scaler = MinMaxScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
-
-        exit(0)
-        # Create the model
-        model = create_model(X_train, y_train)
 
         # # Train
         history = model.fit(X_train, y_train, epochs=self.cf.getint('NeuralNetwork', 'epochs'), batch_size=self.cf.getint('NeuralNetwork', 'batch_size'), 
