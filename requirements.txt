@@ -1,5 +1,7 @@
+pandas
 gensim
 configparser
+bs4
 cltk
 keras
 tensorflow
