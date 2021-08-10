@@ -8,6 +8,7 @@ from tensorflow.keras import layers
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.utils import to_categorical
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
@@ -29,10 +30,10 @@ class Neural_network_handler:
         add_padding = False
         make_neural_readable = False
         flatten_vector = False
-        create_model = False
+        create_model = True
         test_model = False
 
-        load_X_y = False
+        load_X_y = True
 
         # This functions add padding to every line
         if add_padding:
@@ -76,6 +77,13 @@ class Neural_network_handler:
             _epochs = int(self.cf.getint('NeuralNetwork', 'epochs'))
             _batch_size = int(self.cf.getint('NeuralNetwork', 'batch_size'))
 
+            # Encode: 2 for elision and 3 for padding (0 for short, 1 for long)
+            for i in range(len(y)):
+                y[i] = [2 if x == -1 else 3 if x == -100 else x for x in y[i]]
+
+            # one hot encode output variable (for class prediction)
+            # y = to_categorical(y, num_classes=4)
+
             # Split test and train set
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
@@ -85,7 +93,7 @@ class Neural_network_handler:
             # X_test = scaler.transform(X_test)
 
             # Create the model #FIXME: should we put this inside a function?
-            model = Create_model(_input_dim, _output_layer_size)
+            model = self.Create_model(_input_dim, _output_layer_size)
 
             # # Train
             history = model.fit(X_train, y_train, epochs=_epochs, batch_size=_batch_size,
@@ -96,6 +104,8 @@ class Neural_network_handler:
 
             print('Accuracy (training): %.2f' % (train_accuracy * 100))
             print('Accuracy (testing): %.2f' % (test_accuracy * 100))
+
+            self.Create_plots(history)
 
             model.save('pickle/model')
 
@@ -110,14 +120,24 @@ class Neural_network_handler:
             for i in range(len(x_new)):
                 print("X={0}, Predicted={1}, Expected={2}".format(x_new[i], y_new[i], y[i]))
 
-    def Create_model(self, _input_dim, _output_layer_size)
+    def Create_model(self, _input_dim, _output_layer_size):
+        # Model parameters
+        _opt = 'adam'
+        # opt = SGD(lr=0.01, momentum=0.9)
+
+        _loss = 'sparse_categorical_crossentropy'
+        _loss = 'categorical_crossentropy'
+
         #TODO: This needs a lot of tweaking now!
         model = Sequential()
-        model.add(Dense(12, input_dim=_input_dim, activation='relu'))
-        model.add(Dense(8, activation='relu'))
-        model.add(Dense(_output_layer_size, activation='sigmoid'))
+        model.add(Dense(16, input_dim=_input_dim, activation='relu'))
+        model.add(Dense(16, activation='relu'))
+        # model.add(Dense(_output_layer_size, activation='sigmoid'))
+        # model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
         # compile the keras model
-        model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+        model.add(Dense(4, activation='softmax'))
+        model.compile(loss=_loss, optimizer=_opt, metrics=['accuracy'])
 
         return model
 
@@ -251,3 +271,20 @@ class Neural_network_handler:
             previous_line = current_line
 
         return(nn_df)
+
+    def Create_plots(self, history):
+        print('Hello')
+        # plot loss during training
+        pyplot.subplot(211)
+        pyplot.title('Loss')
+        pyplot.plot(history.history['loss'], label='train')
+        pyplot.plot(history.history['val_loss'], label='test')
+        pyplot.legend()
+        # plot accuracy during training
+        pyplot.subplot(212)
+        pyplot.title('Accuracy')
+        pyplot.plot(history.history['accuracy'], label='train')
+        pyplot.plot(history.history['val_accuracy'], label='test')
+        pyplot.legend()
+        # pyplot.show()
+        pyplot.savefig('plots/plot.png')
