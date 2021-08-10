@@ -68,18 +68,31 @@ class Neural_network_handler:
         print("Training data: shape={}".format(X.shape))
         print("Training target data: shape={}".format(y.shape))
 
+        from numpy import mean
+        from numpy import std
+
+        # Encode: 2 for elision and 3 for padding (0 for short, 1 for long)
+        y[y == -1] = 2
+        y[y == -100] = 3
+
+        from sklearn.preprocessing import MultiLabelBinarizer
+        mlb = MultiLabelBinarizer()
+        y = mlb.fit_transform(y)
+
+        # results = self.evaluate_model(X, y)
+        # print('Accuracy: %.3f (%.3f)' % (mean(results), std(results)))
+
+        # exit(0)
+
         if create_model:
             # Specify the input dimension of the network
-            _input_dim = int(self.cf.get('NeuralNetwork', 'max_length')) * int(self.cf.get('Word2Vec', 'vector_size'))
+            _input_dim = X.shape[1] #int(self.cf.get('NeuralNetwork', 'max_length')) * int(self.cf.get('Word2Vec', 'vector_size'))
+            _output_dim = y.shape[1] #_output_layer_size = int(self.cf.get('NeuralNetwork', 'max_length'))
 
             # Neural Network parameters
-            _output_layer_size = int(self.cf.get('NeuralNetwork', 'max_length'))
             _epochs = int(self.cf.getint('NeuralNetwork', 'epochs'))
             _batch_size = int(self.cf.getint('NeuralNetwork', 'batch_size'))
 
-            # Encode: 2 for elision and 3 for padding (0 for short, 1 for long)
-            for i in range(len(y)):
-                y[i] = [2 if x == -1 else 3 if x == -100 else x for x in y[i]]
 
             # one hot encode output variable (for class prediction)
             # y = to_categorical(y, num_classes=4)
@@ -92,8 +105,7 @@ class Neural_network_handler:
             # X_train = scaler.fit_transform(X_train)
             # X_test = scaler.transform(X_test)
 
-            # Create the model #FIXME: should we put this inside a function?
-            model = self.Create_model(_input_dim, _output_layer_size)
+            model = self.Create_model(_input_dim, _output_dim)
 
             # # Train
             history = model.fit(X_train, y_train, epochs=_epochs, batch_size=_batch_size,
@@ -140,6 +152,7 @@ class Neural_network_handler:
         model.compile(loss=_loss, optimizer=_opt, metrics=['accuracy'])
 
         return model
+
 
     def Flatten_vector(self, df):
 
@@ -288,3 +301,62 @@ class Neural_network_handler:
         pyplot.legend()
         # pyplot.show()
         pyplot.savefig('plots/plot.png')
+
+    def get_model(self, n_inputs, n_outputs):
+        model = Sequential()
+        model.add(Dense(20, input_dim=n_inputs, kernel_initializer='he_uniform', activation='relu'))
+        model.add(Dense(n_outputs, activation='softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        return model
+
+    def evaluate_model(self, X, y):
+        from sklearn.model_selection import RepeatedKFold
+        from sklearn.metrics import accuracy_score
+
+        results = list()
+        n_inputs, n_outputs = X.shape[1], y.shape[1]
+        # define evaluation procedure
+        cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
+        # enumerate folds
+        for train_ix, test_ix in cv.split(X):
+            # prepare data
+            X_train, X_test = X[train_ix], X[test_ix]
+            y_train, y_test = y[train_ix], y[test_ix]
+            # define model
+            model = self.get_model(n_inputs, n_outputs)
+            # fit model
+            # model.fit(X_train, y_train, verbose=0, epochs=100)
+            history = model.fit(X_train, y_train, verbose=1, epochs=10, batch_size=1,
+                                validation_data=(X_test, y_test), shuffle=True)
+            # make a prediction on the test set
+            yhat = model.predict(X_test)
+            # round probabilities to class labels
+            yhat = yhat.round()
+            # calculate accuracy
+            acc = accuracy_score(y_test, yhat)
+            # store result
+            print('>%.3f' % acc)
+            results.append(acc)
+
+            self.Create_plots(history)
+
+        return results
+
+    # def Create_model(self, _input_dim, _output_layer_size):
+        # # Model parameters
+        # _opt = 'adam'
+        # # opt = SGD(lr=0.01, momentum=0.9)
+
+        # _loss = 'sparse_categorical_crossentropy'
+        # _loss = 'categorical_crossentropy'
+
+        # #TODO: This needs a lot of tweaking now!
+        # model = Sequential()
+        # model.add(Dense(16, input_dim=_input_dim, activation='relu'))
+        # model.add(Dense(16, activation='relu'))
+        # # model.add(Dense(_output_layer_size, activation='sigmoid'))
+        # # model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
+        # # compile the keras model
+        # model.add(Dense(4, activation='softmax'))
+        # model.compile(loss=_loss, optimizer=_opt, metrics=['accuracy'])

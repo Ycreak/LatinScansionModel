@@ -66,7 +66,7 @@ if run_pedecerto:
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'), parse.df)
 
 pedecerto_df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'))
-
+print(pedecerto_df)
 # Run the model generator on the given list if needed
 if run_model_generator:
     print('Running Word2Vec model generator')
