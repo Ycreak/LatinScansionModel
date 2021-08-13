@@ -13,6 +13,8 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
+from sklearn.preprocessing import MultiLabelBinarizer, LabelBinarizer
+
 from matplotlib import pyplot
 
 import utilities as util
@@ -30,10 +32,11 @@ class Neural_network_handler:
         add_padding = False
         make_neural_readable = False
         flatten_vector = False
-        create_model = True
-        test_model = False
+        create_model = True #False
+        test_model = True
 
         load_X_y = True
+        verbose = False
 
         # This functions add padding to every line
         if add_padding:
@@ -42,6 +45,7 @@ class Neural_network_handler:
             util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'padded_set'), df)
 
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'padded_set'))
+        if verbose: print(df)
 
         if make_neural_readable:
             # This abomination of a function puts each line in a single dataframe row
@@ -50,112 +54,175 @@ class Neural_network_handler:
             df = self.Turn_df_into_neural_readable(df)
             util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'neural_readable'), df)
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'neural_readable'))
+        if verbose: print(df)
 
         if flatten_vector:
             # The network wants a single vector as input, so we flatten it for every line in the text
             df = self.Flatten_vector(df)
             util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'), df)
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'))
-
+        if verbose: print(df)
         ####
         # TODO: Philippe plz continue here
-        ####
+        ####)
 
         # Turn df into X and y for neural network
-        print('Creating X and y')
+        print('Loading X and y')
         X, y = self.Create_X_y(df, load_X_y)
-
-        print("Training data: shape={}".format(X.shape))
-        print("Training target data: shape={}".format(y.shape))
-
-        from numpy import mean
-        from numpy import std
+        # print("Training data: shape={}".format(X.shape))
+        # print("Training target data: shape={}".format(y.shape))
 
         # Encode: 2 for elision and 3 for padding (0 for short, 1 for long)
-        y[y == -1] = 2
-        y[y == -100] = 3
-
-        from sklearn.preprocessing import MultiLabelBinarizer
-        mlb = MultiLabelBinarizer()
-        y = mlb.fit_transform(y)
-
-        # results = self.evaluate_model(X, y)
-        # print('Accuracy: %.3f (%.3f)' % (mean(results), std(results)))
-
-        # exit(0)
+        # TODO: if going for categorical prediction, replace with 2 and 3 again
+        y[y == -1] = 1 # 2 # Dont forget, y is numpy.ndarray
+        y[y == -100] = 1 # 3
 
         if create_model:
-            # Specify the input dimension of the network
-            _input_dim = X.shape[1] #int(self.cf.get('NeuralNetwork', 'max_length')) * int(self.cf.get('Word2Vec', 'vector_size'))
-            _output_dim = y.shape[1] #_output_layer_size = int(self.cf.get('NeuralNetwork', 'max_length'))
+            ''' 
+            README
+            The main problem at the moment is as follows. I give a single input (ndarray), which is a line of 20 syllables, represented 
+            by vectors of dimension 25 (X.shape = 500). The output i want is 20 dimensional, one for each syllable. The output i want is
+            multiclass: each syllable can be short, long, elided or simply padding (encoded as 0, 1, 2 or 3). The problem is therefore 
+            multiclass: each of the 20 outputs can have one and only one label. If i use binary classification and encode elision and padding
+            as 1 as well, it seems to work quite well (see docs/first_four_lines.txt). If i use categorical classification and try to predict
+            classes, it doesnt work as intended. Questions: can i just do multiclass prediction, or do i need to binarize my labels? Do we
+            need scaling. Can we do multi output multi class the way i implemented it?
+            '''
 
-            # Neural Network parameters
-            _epochs = int(self.cf.getint('NeuralNetwork', 'epochs'))
-            _batch_size = int(self.cf.getint('NeuralNetwork', 'batch_size'))
+            labels = ['short', 'long', 'elision', 'padding']
 
-
-            # one hot encode output variable (for class prediction)
-            # y = to_categorical(y, num_classes=4)
-
-            # Split test and train set
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-
-            # Scale data #FIXME: do we need a scaler? All values are between -1 and 1.
+            # TODO: do we need to scale the X data? All values are between -1 and 1.
             # scaler = MinMaxScaler()
             # X_train = scaler.fit_transform(X_train)
             # X_test = scaler.transform(X_test)
 
-            model = self.Create_model(_input_dim, _output_dim)
+            #TODO: i have four labels i want to predict. do we need to binarize this?
+            # mlb = MultiLabelBinarizer()
+            # y = mlb.fit_transform(y)
 
-            # # Train
-            history = model.fit(X_train, y_train, epochs=_epochs, batch_size=_batch_size,
-                                validation_data=(X_test, y_test), shuffle=True)
+            # one hot encode output variable (for class prediction)
+            # y = to_categorical(y, num_classes=4)
 
-            _, train_accuracy = model.evaluate(X_train, y_train)
-            _, test_accuracy = model.evaluate(X_test, y_test)
-
-            print('Accuracy (training): %.2f' % (train_accuracy * 100))
-            print('Accuracy (testing): %.2f' % (test_accuracy * 100))
-
-            self.Create_plots(history)
+            # Create and evaluate the model. Uses k-fold cross validation
+            model = self.Evaluate_model(X, y)
 
             model.save('pickle/model')
 
         if test_model:
-            # Test the model #FIXME: only one output?
-            model = models.load_model('pickle/model')
+            # Load if needed. Now I just create the model every time (10 epochs)
+            # model = models.load_model('pickle/model')
 
-            x_new = X[1:5]
+            # TODO: i can predict using binary, but i need to predict classes. predict_classes is deprecated
+            # However, the model.predict(X).argmax(axis=-1) results in the network predicting a single int64?
+            # yhat = model.predict_classes(x_new)
+            # yhat = model.predict(X).argmax(axis=-1) #model.predict_classes(X)
+            # print([labels[i] for i in model.predict(X).argmax(axis=-1)])
 
-            y_new = model.predict_classes(x_new)
+            # This works fine for binary classification
+            yhat = model.predict(X)
 
-            for i in range(len(x_new)):
-                print("X={0}, Predicted={1}, Expected={2}".format(x_new[i], y_new[i], y[i]))
+            # Predict and test the first 10 lines. Also, print the similarity of predicted and expected
+            for i in range(10):
+                print('Expected : {0}'.format(y[i])) 
 
-    def Create_model(self, _input_dim, _output_layer_size):
-        # Model parameters
+                try:
+                    # Round the number to the next whole number (for readability)
+                    round_to_whole = [round(num) for num in yhat[i]]
+                    print('Predicted: {0}'.format(round_to_whole))
+                    res = self.Calculate_list_similarity(y[i], round_to_whole)
+                    print('Similarity score: ',res)
+                except:
+                    print('Predicted: %s' % yhat[i])
+
+                print('\n')
+
+    def Calculate_list_similarity(self, list1, list2):
+        # Calculates the similarity between two lists (entry for entry)
+        score = 0
+
+        for i in range(len(list1)):
+            # print(list1[i], list2[i])
+
+            if list1[i] == list2[i]:
+                score += 1
+            else:
+                score -= 1
+
+        return score / len(list1) * 100
+
+    def Get_model(self, n_inputs, n_outputs):
+        # Creates the model and its layers. 
         _opt = 'adam'
-        # opt = SGD(lr=0.01, momentum=0.9)
+        # TODO: this should be categorical_crossentropy, but i cant get it to work
+        _loss = 'binary_crossentropy' # 'categorical_crossentropy'# _loss = 'sparse_categorical_crossentropy'
 
-        _loss = 'sparse_categorical_crossentropy'
-        _loss = 'categorical_crossentropy'
-
-        #TODO: This needs a lot of tweaking now!
         model = Sequential()
-        model.add(Dense(16, input_dim=_input_dim, activation='relu'))
+        # Input Layer
+        model.add(Dense(20, input_dim=n_inputs, kernel_initializer='he_uniform', activation='relu'))
+        # Hidden Layers
         model.add(Dense(16, activation='relu'))
-        # model.add(Dense(_output_layer_size, activation='sigmoid'))
-        # model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-
-        # compile the keras model
-        model.add(Dense(4, activation='softmax'))
-        model.compile(loss=_loss, optimizer=_opt, metrics=['accuracy'])
+        # Output Layer. TODO: this should be a softmax if we have categorical crossentropy
+        model.add(Dense(n_outputs, activation='sigmoid')) #softmax
+        # TODO: i commented the metrics, because these dont make sense at the moment 
+        model.compile(loss=_loss, optimizer=_opt)# , metrics=['accuracy'])
 
         return model
 
+    def Evaluate_model(self, X, y):
+        # Evaluates the model using KFolds
+        from sklearn.model_selection import RepeatedKFold
+        from sklearn.metrics import accuracy_score
+
+        # Neural Network parameters
+        _epochs = int(self.cf.getint('NeuralNetwork', 'epochs'))
+        _batch_size = int(self.cf.getint('NeuralNetwork', 'batch_size'))
+
+        results = list()
+        n_inputs, n_outputs = X.shape[1], y.shape[1]
+        # define evaluation procedure
+        cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
+        # enumerate folds
+        for train_ix, test_ix in cv.split(X):
+            # prepare data
+            X_train, X_test = X[train_ix], X[test_ix]
+            y_train, y_test = y[train_ix], y[test_ix]
+            # define model
+            model = self.Get_model(n_inputs, n_outputs)
+            # fit model
+            model.fit(X_train, y_train, verbose=1, epochs=_epochs)
+            # TODO: is this below a better line? that is from the bio modeling code :)
+            # history = model.fit(X_train, y_train, verbose=1, epochs=_epochs, batch_size=_batch_size,
+                                # validation_data=(X_test, y_test), shuffle=True)
+           
+            # TODO: this could be nice to print, but it doesnt work at the moment
+            # make a prediction on the test set
+            # yhat = model.predict(X_test)
+            # round probabilities to class labels
+            # yhat = yhat.round()
+            # calculate accuracy
+            # acc = accuracy_score(y_test, yhat)
+            # store result
+            # print('>{0}'.format(acc))
+            # results.append(acc)
+
+            # TODO: printing accuracy, which method would be best?
+            # _, train_accuracy = model.evaluate(X_train, y_train)
+            # _, test_accuracy = model.evaluate(X_test, y_test)
+
+            # print('Accuracy (training): {0}'.format(train_accuracy * 100))
+            # print('Accuracy (testing): {0}'.format(test_accuracy * 100))
+            
+            # if you need debugging, you might want to use this line
+            # self.Create_plots(history)
+            
+            # TODO: i return the model now after a single training round, just to get
+            # everything working. Evaluate_model should just be used for tweaking settings
+            return model
+
+        return results
 
     def Flatten_vector(self, df):
-
+        # FIXME: this is not reusable
         for i in range(len(df)): # For debugging    
             # print(df["vector"][i])
 
@@ -286,7 +353,8 @@ class Neural_network_handler:
         return(nn_df)
 
     def Create_plots(self, history):
-        print('Hello')
+        # Does what it says on the tin
+
         # plot loss during training
         pyplot.subplot(211)
         pyplot.title('Loss')
@@ -302,61 +370,4 @@ class Neural_network_handler:
         # pyplot.show()
         pyplot.savefig('plots/plot.png')
 
-    def get_model(self, n_inputs, n_outputs):
-        model = Sequential()
-        model.add(Dense(20, input_dim=n_inputs, kernel_initializer='he_uniform', activation='relu'))
-        model.add(Dense(n_outputs, activation='softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-        return model
 
-    def evaluate_model(self, X, y):
-        from sklearn.model_selection import RepeatedKFold
-        from sklearn.metrics import accuracy_score
-
-        results = list()
-        n_inputs, n_outputs = X.shape[1], y.shape[1]
-        # define evaluation procedure
-        cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
-        # enumerate folds
-        for train_ix, test_ix in cv.split(X):
-            # prepare data
-            X_train, X_test = X[train_ix], X[test_ix]
-            y_train, y_test = y[train_ix], y[test_ix]
-            # define model
-            model = self.get_model(n_inputs, n_outputs)
-            # fit model
-            # model.fit(X_train, y_train, verbose=0, epochs=100)
-            history = model.fit(X_train, y_train, verbose=1, epochs=10, batch_size=1,
-                                validation_data=(X_test, y_test), shuffle=True)
-            # make a prediction on the test set
-            yhat = model.predict(X_test)
-            # round probabilities to class labels
-            yhat = yhat.round()
-            # calculate accuracy
-            acc = accuracy_score(y_test, yhat)
-            # store result
-            print('>%.3f' % acc)
-            results.append(acc)
-
-            self.Create_plots(history)
-
-        return results
-
-    # def Create_model(self, _input_dim, _output_layer_size):
-        # # Model parameters
-        # _opt = 'adam'
-        # # opt = SGD(lr=0.01, momentum=0.9)
-
-        # _loss = 'sparse_categorical_crossentropy'
-        # _loss = 'categorical_crossentropy'
-
-        # #TODO: This needs a lot of tweaking now!
-        # model = Sequential()
-        # model.add(Dense(16, input_dim=_input_dim, activation='relu'))
-        # model.add(Dense(16, activation='relu'))
-        # # model.add(Dense(_output_layer_size, activation='sigmoid'))
-        # # model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-
-        # # compile the keras model
-        # model.add(Dense(4, activation='softmax'))
-        # model.compile(loss=_loss, optimizer=_opt, metrics=['accuracy'])
