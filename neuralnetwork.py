@@ -130,7 +130,7 @@ class Neural_network_handler:
                     round_to_whole = [round(num) for num in yhat[i]]
                     print('Predicted: {0}'.format(round_to_whole))
                     res = self.Calculate_list_similarity(y[i], round_to_whole)
-                    print('Similarity score: ',res)
+                    print('Similarity score for line {0}: {1}'.format(i, res))
                 except:
                     print('Predicted: %s' % yhat[i])
 
@@ -138,14 +138,12 @@ class Neural_network_handler:
 
     def Calculate_list_similarity(self, list1, list2):
         # Calculates the similarity between two lists (entry for entry)
-        score = 0
+        score = 20
 
         for i in range(len(list1)):
             # print(list1[i], list2[i])
 
-            if list1[i] == list2[i]:
-                score += 1
-            else:
+            if list1[i] != list2[i]:
                 score -= 1
 
         return score / len(list1) * 100
