@@ -29,14 +29,14 @@ class Neural_network_handler:
         self.cf.read("config.ini")
 
         # Control flow booleans
-        add_padding = False
-        make_neural_readable = False
-        flatten_vector = False
+        add_padding = True
+        make_neural_readable = True
+        flatten_vector = True
         create_model = True #False
         test_model = True
 
-        load_X_y = True
-        verbose = False
+        load_X_y = False
+        verbose = True
 
         # This functions add padding to every line
         if add_padding:
@@ -272,7 +272,7 @@ class Neural_network_handler:
         Returns:
             df: with padded sentences
         """
-        column_names = ["line", "syllable", "length", "vector"]
+        column_names = ["book", "line", "syllable", "length", "vector"]
         new_df = pd.DataFrame(columns = column_names)
 
         # Loop through the the lines and their vectors
@@ -287,7 +287,7 @@ class Neural_network_handler:
         for i in Bar('Processing').iter(range(len(df))):
         # for i in range(len(df)): # For debugging    
             current_line = int(df["line"][i]) # Of course, pandas saves my integer as a string
-
+            
             if current_line == previous_line:
                 # We are working in the same line!            
                 new_line = {'line': current_line, 'syllable': df["syllable"][i], 'length': df["length"][i], 'vector': df["vector"][i]}
@@ -303,7 +303,7 @@ class Neural_network_handler:
                 # We created padding, now continue as normal
                 counter = 0
 
-                new_line = {'line': current_line, 'syllable': df["syllable"][i], 'length': df["length"][i], 'vector': df["vector"][i]}
+                new_line = {'book': int(df["book"][i]), 'line': current_line, 'syllable': df["syllable"][i], 'length': df["length"][i], 'vector': df["vector"][i]}
                 new_df = new_df.append(new_line, ignore_index=True)
                 counter += 1
 
@@ -313,7 +313,7 @@ class Neural_network_handler:
         return new_df
 
     def Turn_df_into_neural_readable(self, df):
-        column_names = ["vector", "target"]
+        column_names = ["book", "line", "vector", "target"]
         nn_df = pd.DataFrame(columns = column_names)
 
         previous_line = 1
@@ -337,7 +337,7 @@ class Neural_network_handler:
                 target_list.append(df['length'][i]) # Create a list of the targets
 
             else:
-                new_line = {'vector': vector_list, 'target': target_list}
+                new_line = {'book': df["book"][i], 'line': df["line"][i], 'vector': vector_list, 'target': target_list}
                 nn_df = nn_df.append(new_line, ignore_index=True)
 
                 vector_list = []

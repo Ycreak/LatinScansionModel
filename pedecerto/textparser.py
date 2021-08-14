@@ -22,7 +22,7 @@ class Pedecerto_parser:
   
   def __init__(self, path, givenLine = -1):
     # Create pandas dataframe
-    column_names = ["author", "text", "line", "syllable", "length"]
+    column_names = ["author", "text", "book", "line", "syllable", "length"]
     # column_names = ["author", "text", "line", "syllable", "foot", "feet_pos", "length", "word_boundary", "metrical_feature"]
     df = pd.DataFrame(columns = column_names) 
     
@@ -34,22 +34,27 @@ class Pedecerto_parser:
         # Use beautiful soup to process the xml
         soupedEntry = BeautifulSoup(fh,"xml")
         # Retrieve the title and author from the xml file
-        self.title = soupedEntry.title.string
-        self.author = soupedEntry.author.string
+        text_title = str(soupedEntry.title.string)
+        author = str(soupedEntry.author.string)
         # Clean the lines (done by MQDQ)
         soupedEntry = util.clean(soupedEntry('line'))
 
         if givenLine == -1: #FIXME: deprecated
           # Do the entire folder
           # for line in range(len(soupedEntry)):
-          for line in Bar('Processing {0},{1}'.format(self.author, self.title)).iter(range(len(soupedEntry))):
+          for line in Bar('Processing {0}, {1}'.format(author, text_title)).iter(range(len(soupedEntry))):
             # progress_percentage = round(line / len(soupedEntry) * 100 ,2)
             # print('Progress on {0}, {1}: line {2} of {3} processed: {4}%'.format(self.author, self.title, line, len(soupedEntry), progress_percentage))
 
+            book_title = int(soupedEntry[line].parent.get('title'))
+
             # Process the entry. It will append the line to the df
-            line_df = self.Process_line(soupedEntry[line])
+            line_df = self.Process_line(soupedEntry[line], book_title, text_title, author)
             df = df.append(line_df, ignore_index=True)
             # If I greatly improve my own code, am I a wizard, or a moron?
+        
+          print(df)
+
         else:
           # Process just the given line (testing purposes).
           # df = self.Process_line(soupedEntry[givenLine], df)
@@ -57,17 +62,20 @@ class Pedecerto_parser:
       # Store df for later use
       self.df = df #FIXME: better name. How shall we store and exchange between classes?
 
-  def Process_line(self, givenLine):
+  def Process_line(self, givenLine, book_title, text_title, author):
     """Processes a given XML pedecerto line. Puts syllable and length in a dataframe.
 
     Args:
         givenLine (xml): pedecerto xml encoding of a line of poetry
         df (dataframe): to store the data in
+        book_title (str): title of the current book (Book 1)
+        text_title (str): title of the current text (Aeneid)
+        author (str): name of the current author
 
     Returns:
         dataframe: with syllables and their lenght (and some other information)
     """      
-    column_names = ["author", "text", "line", "syllable", "length"]
+    column_names = ["author", "text", "book", "line", "syllable", "length"]
     df = pd.DataFrame(columns = column_names)
     
     current_line = givenLine['name']
@@ -119,7 +127,7 @@ class Pedecerto_parser:
         number_of_scansions -= 1
 
         # Append to dataframe
-        new_line = {'line': current_line, 'syllable': current_syllable, 'length': length}
+        new_line = {'author': author, 'text': text_title, 'book': book_title, 'line': current_line, 'syllable': current_syllable, 'length': length}
         df = df.append(new_line, ignore_index=True)
 
     return df

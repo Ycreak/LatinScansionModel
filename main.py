@@ -37,7 +37,7 @@ import utilities as util
 run_preprocessor = False
 run_pedecerto = False
 run_model_generator = False
-add_embeddings_to_df = False
+add_embeddings_to_df = True
 run_neural_network = True
 
 # Read the config file for later use
