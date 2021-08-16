@@ -29,12 +29,13 @@ class Neural_network_handler:
         self.cf.read("config.ini")
 
         # Control flow booleans
-        add_padding = False #True
-        flatten_vector = False
-        create_model = False
-        test_model = False #True
+        add_padding = True
+        make_neural_readable = True
+        flatten_vector = True
+        create_model = True #False
+        test_model = True
 
-        load_X_y = True
+        load_X_y = False
         verbose = True
 
         # This functions add padding to every line
@@ -46,16 +47,21 @@ class Neural_network_handler:
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'padded_set'))
         if verbose: print(df)
 
+        if make_neural_readable:
+            # This abomination of a function puts each line in a single dataframe row
+            # Now the vectors and lengths are both put into their own list, divided into two columns in the df.
+            print("Creating vector-target dataframe")
+            df = self.Turn_df_into_neural_readable(df)
+            util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'neural_readable'), df)
+        df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'neural_readable'))
+        if verbose: print(df)
+
         if flatten_vector:
             # The network wants a single vector as input, so we flatten it for every line in the text
-            print('Flattening the vectors')
-            df = self.Flatten_dataframe_column(df, 'vector')
+            df = self.Flatten_vector(df)
             util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'), df)
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'))
         if verbose: print(df)
-
-        exit(0)
-
         ####
         # TODO: Philippe plz continue here
         ####)
@@ -117,7 +123,7 @@ class Neural_network_handler:
 
             # Predict and test the first 10 lines. Also, print the similarity of predicted and expected
             for i in range(10):
-                print('Expected : {0}'.format(y[i]))
+                print('Expected : {0}'.format(y[i])) 
 
                 try:
                     # Round the number to the next whole number (for readability)
@@ -185,7 +191,7 @@ class Neural_network_handler:
             # TODO: is this below a better line? that is from the bio modeling code :)
             # history = model.fit(X_train, y_train, verbose=1, epochs=_epochs, batch_size=_batch_size,
                                 # validation_data=(X_test, y_test), shuffle=True)
-
+           
             # TODO: this could be nice to print, but it doesnt work at the moment
             # make a prediction on the test set
             # yhat = model.predict(X_test)
@@ -203,18 +209,24 @@ class Neural_network_handler:
 
             # print('Accuracy (training): {0}'.format(train_accuracy * 100))
             # print('Accuracy (testing): {0}'.format(test_accuracy * 100))
-
+            
             # if you need debugging, you might want to use this line
             # self.Create_plots(history)
-
+            
             # TODO: i return the model now after a single training round, just to get
             # everything working. Evaluate_model should just be used for tweaking settings
             return model
 
         return results
 
-    def Flatten_dataframe_column(self, df, col):
-        df[col] = df.apply(lambda x : np.array(x[col]).flatten(), axis=1)
+    def Flatten_vector(self, df):
+        # FIXME: this is not reusable
+        for i in range(len(df)): # For debugging    
+            # print(df["vector"][i])
+
+            array = np.array(df["vector"][i]).flatten().tolist()
+            df["vector"][i] = array
+
         return df
 
     def Create_X_y(self, df, use_file):
@@ -263,50 +275,80 @@ class Neural_network_handler:
         column_names = ["book", "line", "syllable", "length", "vector"]
         new_df = pd.DataFrame(columns = column_names)
 
+        # Loop through the the lines and their vectors
+        previous_line = 1
+        counter = 0
         # same_line = True
         zero_vector = np.zeros(self.cf.getint('Word2Vec', 'vector_size'))
         max_length_sentence = self.cf.getint('NeuralNetwork', 'max_length')
 
-        # Get number of books to process
-        num_books = df['book'].max()
-        print(num_books)
-
-        for i in Bar('Processing').iter(range(num_books)):
-        # for i in range(num_books): # For debugging    
-            # Get only lines from this book
-            current_book = i + 1
-            book_df = df.loc[df['book'] == current_book]
-
-            num_lines = book_df['line'].max()
-            print(num_lines)
-
-            for j in range(num_lines):
-                current_line = j + 1
-
-                filtered_df = book_df[book_df["line"] == current_line]
-
-                vector_list = filtered_df['vector'].tolist()
-                length_list = filtered_df['length'].tolist()
-                syllable_list = filtered_df['syllable'].tolist()
-
-                # Unpack wrapped vectors from the list
-                vector_list = [i.v for i in vector_list]
-                # print(vector_list)
-                # exit(0)
-
-                # Check length of this list and add padding accordingly  
-                padding_needed = max_length_sentence - len(vector_list)
-
-                for k in range(padding_needed):
-                    vector_list.append(zero_vector)
-                    length_list.append(3) # Denote padding with int 3
-                    syllable_list.append(0)
-
-                # Now we can create a new pandas dataframe with all information
-                new_line = {'book': current_book, 'line': current_line, 'syllable': syllable_list, 'length': length_list, 'vector': vector_list}
+        # This is so very C++, it hurts. #FIXME: to fix this, we need a column BOOK or TEXT to distinguish between the different line 1 and line 2 etc.
+        # However, this is not the same for every text, thus the reason for this approach.
+        for i in Bar('Processing').iter(range(len(df))):
+        # for i in range(len(df)): # For debugging    
+            current_line = int(df["line"][i]) # Of course, pandas saves my integer as a string
+            
+            if current_line == previous_line:
+                # We are working in the same line!            
+                new_line = {'line': current_line, 'syllable': df["syllable"][i], 'length': df["length"][i], 'vector': df["vector"][i]}
                 new_df = new_df.append(new_line, ignore_index=True)
+                counter += 1
+
+            else:
+                while counter < max_length_sentence:
+                    new_line = {'line': previous_line, 'syllable': 0, 'length': -100, 'vector': zero_vector}
+                    new_df = new_df.append(new_line, ignore_index=True)
+                    counter += 1
+
+                # We created padding, now continue as normal
+                counter = 0
+
+                new_line = {'book': int(df["book"][i]), 'line': current_line, 'syllable': df["syllable"][i], 'length': df["length"][i], 'vector': df["vector"][i]}
+                new_df = new_df.append(new_line, ignore_index=True)
+                counter += 1
+
+            # Update current line
+            previous_line = current_line
 
         return new_df
+
+    def Turn_df_into_neural_readable(self, df):
+        column_names = ["book", "line", "vector", "target"]
+        nn_df = pd.DataFrame(columns = column_names)
+
+        previous_line = 1
+        same_line = True
+        vector_list = []
+        target_list = []
+
+        # for i in range(len(df)):
+        for i in Bar('Processing').iter(range(len(df))):
+            # This is not DRY
+            current_line = df["line"][i]
+
+            if current_line == previous_line:
+                same_line = True
+            else:
+                same_line = False
+
+            if same_line:
+                # We are working in the same line!                         
+                vector_list.append(df['vector'][i]) # Create a list of the vectors
+                target_list.append(df['length'][i]) # Create a list of the targets
+
+            else:
+                new_line = {'book': df["book"][i], 'line': df["line"][i], 'vector': vector_list, 'target': target_list}
+                nn_df = nn_df.append(new_line, ignore_index=True)
+
+                vector_list = []
+                target_list = []
+
+                vector_list.append(df['vector'][i])
+                target_list.append(df['length'][i])
+
+            previous_line = current_line
+
+        return(nn_df)
 
     def Create_plots(self, history):
         # Does what it says on the tin

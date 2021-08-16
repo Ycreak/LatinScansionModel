@@ -105,7 +105,7 @@ class Pedecerto_parser:
           foot = split_scansion[i][0]
           feet_pos = split_scansion[i][1]
 
-          # Interpret length based on pedecerto encoding (could be done much quicker)
+          # Interpret length based on pedecerto encoding
           if feet_pos == 'A':
             length = 1
           elif feet_pos == 'T':
@@ -115,11 +115,11 @@ class Pedecerto_parser:
           elif feet_pos == 'c':
             length = 0
           elif feet_pos == '':
-            length = 2
+            length = -1        
 
         # No scansions available? Elision. Denote with -1
         else:
-          length = 2
+          length = -1
           feet_pos = 'NA'
           foot = 'NA'
 
@@ -127,7 +127,7 @@ class Pedecerto_parser:
         number_of_scansions -= 1
 
         # Append to dataframe
-        new_line = {'author': author, 'text': text_title, 'book': int(book_title), 'line': int(current_line), 'syllable': current_syllable, 'length': int(length)}
+        new_line = {'author': author, 'text': text_title, 'book': book_title, 'line': current_line, 'syllable': current_syllable, 'length': length}
         df = df.append(new_line, ignore_index=True)
 
     return df
