@@ -227,9 +227,6 @@ class Neural_network_handler:
 
             return X, y
 
-        X = []
-        y = []
-
         X = list()
         y = list()
         for _, row in df.iterrows():
@@ -291,8 +288,6 @@ class Neural_network_handler:
 
                 # Unpack wrapped vectors from the list
                 vector_list = [i.v for i in vector_list]
-                # print(vector_list)
-                # exit(0)
 
                 # Check length of this list and add padding accordingly  
                 padding_needed = max_length_sentence - len(vector_list)
