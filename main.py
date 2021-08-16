@@ -32,12 +32,16 @@ import utilities as util
 ########
 # MAIN #
 ########
+class Vector:
+    # Wrapper class for vectors in a pandas dataframe 
+    def __init__(self, v):
+        self.v = v
 
 # Parameters to run each step
 run_preprocessor = False
 run_pedecerto = False
 run_model_generator = False
-add_embeddings_to_df = True
+add_embeddings_to_df = False 
 run_neural_network = True
 
 # Read the config file for later use
@@ -81,24 +85,26 @@ if run_model_generator:
 # Load the saved/created model
 word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
 
+
 # Add the embeddings created by word2vec to the dataframe
 if add_embeddings_to_df:
     print('Adding embeddings to the dataframe')
+
     df = pedecerto_df
-    
-    # Add syllable vectors to the dataframe using the word2vec model
     df['vector'] = df['syllable']
-    # for i in range(len(df)):
-    for i in Bar('Processing').iter(range(len(df))): # This is a very nice progress bar I like very much
+
+    # Add syllable vectors to the dataframe using the word2vec model
+    unique_syllables = set(df['syllable'].tolist())
+
+    for syllable in Bar('Processing').iter(unique_syllables):
         try:
-            syllable = df["syllable"][i]
-            df["vector"][i] = word2vec_model.wv[syllable]
+            vector = word2vec_model.wv[syllable]
+            # Pump (wrapped) vector to the applicable positions
+            df['vector'] = np.where(df['vector'] == syllable, Vector(vector), df['vector'])
         except:
             IndexError('Syllable has no embedding yet.')
 
-    # df.to_csv(cf.get('Pickle', 'embedding_df'), index = False, header=True) #FIXME: save to pickle
     util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'), df)
-
 
 # Provide the neural network with the dataframe
 if run_neural_network:
@@ -107,7 +113,7 @@ if run_neural_network:
     df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'))
     if verbose: print(df)
 
-    nn = Neural_network_handler(df)  
+    nn = Neural_network_handler(df)
 
 
 
