@@ -32,9 +32,9 @@ class Neural_network_handler:
         add_padding = False #True
         flatten_vector = False
         create_model = False
-        test_model = False #True
+        test_model = True
 
-        load_X_y = True
+        load_X_y = False
         verbose = True
 
         # This functions add padding to every line
@@ -54,8 +54,6 @@ class Neural_network_handler:
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'))
         if verbose: print(df)
 
-        exit(0)
-
         ####
         # TODO: Philippe plz continue here
         ####)
@@ -67,9 +65,8 @@ class Neural_network_handler:
         # print("Training target data: shape={}".format(y.shape))
 
         # Encode: 2 for elision and 3 for padding (0 for short, 1 for long)
-        # TODO: if going for categorical prediction, replace with 2 and 3 again
-        y[y == -1] = 1 # 2 # Dont forget, y is numpy.ndarray
-        y[y == -100] = 1 # 3
+        y[y == 2] = 1 # Dont forget, y is numpy.ndarray
+        y[y == 3] = 1
 
         if create_model:
             ''' 
@@ -104,7 +101,7 @@ class Neural_network_handler:
 
         if test_model:
             # Load if needed. Now I just create the model every time (10 epochs)
-            # model = models.load_model('pickle/model')
+            model = models.load_model('pickle/model')
 
             # TODO: i can predict using binary, but i need to predict classes. predict_classes is deprecated
             # However, the model.predict(X).argmax(axis=-1) results in the network predicting a single int64?
@@ -112,11 +109,32 @@ class Neural_network_handler:
             # yhat = model.predict(X).argmax(axis=-1) #model.predict_classes(X)
             # print([labels[i] for i in model.predict(X).argmax(axis=-1)])
 
+            create_prediction_df = True
+
             # This works fine for binary classification
             yhat = model.predict(X)
 
+
+            if create_prediction_df:
+                # TODO: ADD COMMENTS
+                column_names = ["predicted", "expected"]
+                new_df = pd.DataFrame(columns = column_names)
+
+                for i in Bar('Processing').iter(range(len(X))):
+                    new_line = {'expected': y[i], 'predicted': yhat[i]}
+                    new_df = new_df.append(new_line, ignore_index=True)
+
+                book_line_df = df[['book','line', 'syllable']]
+
+                prediction_df = pd.concat([book_line_df, new_df], axis=1, join='inner')
+
+                print(prediction_df)
+
+                util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'prediction_df'), prediction_df)
+
             # Predict and test the first 10 lines. Also, print the similarity of predicted and expected
             for i in range(10):
+
                 print('Expected : {0}'.format(y[i]))
 
                 try:
@@ -135,7 +153,6 @@ class Neural_network_handler:
         score = 20
 
         for i in range(len(list1)):
-            # print(list1[i], list2[i])
 
             if list1[i] != list2[i]:
                 score -= 1
@@ -231,7 +248,7 @@ class Neural_network_handler:
         y = list()
         for _, row in df.iterrows():
             X.append(row['vector'])
-            y.append(row['target'])
+            y.append(row['length'])
 
         # Here I learned that tensorflow errors are unreadable. Lest we forget.
         # ValueError: setting an array element with a sequence.
@@ -266,7 +283,6 @@ class Neural_network_handler:
 
         # Get number of books to process
         num_books = df['book'].max()
-        print(num_books)
 
         for i in Bar('Processing').iter(range(num_books)):
         # for i in range(num_books): # For debugging    
@@ -275,7 +291,6 @@ class Neural_network_handler:
             book_df = df.loc[df['book'] == current_book]
 
             num_lines = book_df['line'].max()
-            print(num_lines)
 
             for j in range(num_lines):
                 current_line = j + 1

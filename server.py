@@ -14,9 +14,12 @@ from json import dumps
 # RUN INSTRUCTIONS
 # FLASK_APP=<filename>.py FLASK_ENV=development flask run --port 5002
 
-from tensorflow.keras import models
+# from tensorflow.keras import models
 import numpy as np
 import pickle
+import configparser
+
+import utilities as util
 
 app = Flask(__name__)
 api = Api(app)
@@ -25,41 +28,44 @@ CORS(app)
 
 @app.route("/Get_neural_data")
 def Get_neural_data():
+    cf = configparser.ConfigParser()
+    cf.read("config.ini")
 
     line_number = int(request.args.get('line_number'))
+    book_number = int(request.args.get('book_number'))
 
-    with open('./pickle/X.npy', 'rb') as f:
-        X = np.load(f, allow_pickle=True)
-    with open('./pickle/y.npy', 'rb') as f:
-        y = np.load(f, allow_pickle=True)
+    # with open('./pickle/X.npy', 'rb') as f:
+        # X = np.load(f, allow_pickle=True)
+    # with open('./pickle/y.npy', 'rb') as f:
+        # y = np.load(f, allow_pickle=True)
 
-    model = models.load_model('./pickle/model')
+    # model = models.load_model('./pickle/model')
 
-    # This works fine for binary classification
-    yhat = model.predict(X)
+    # # This works fine for binary classification
+    # yhat = model.predict(X)
 
-    # Predict and test the first 10 lines. Also, print the similarity of predicted and expected
-    expected = y[line_number-1]
+    # # Predict and test the first 10 lines. Also, print the similarity of predicted and expected
+    # expected = y[line_number-1]
 
-    predicted = [round(num) for num in yhat[line_number-1]]
-    similarity, correct_list = Calculate_list_similarity(expected, predicted)
-    confidence = [int(round(num*100)) for num in yhat[line_number-1]]
+    df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'prediction_df'))
 
-    labels_predicted = ['—' if i==1 else '⏑' if i==0 else i for i in predicted]
+    df_filtered = df[(df['book'] == book_number) & (df['line'] == line_number)].reset_index()
+
+    predicted = df_filtered['predicted'][0]
+    expected = df_filtered['expected'][0]
+    syllables = df_filtered['syllable'][0]
+
+    predicted_int = [round(num) for num in predicted]
+    similarity, correct_list = Calculate_list_similarity(expected, predicted_int)
+
+    confidence = [int(round(num*100)) for num in predicted]
+
+    labels_predicted = ['—' if i==1 else '⏑' if i==0 else i for i in predicted_int]
     labels_expected = ['—' if i==1 else '⏑' if i==0 else i for i in expected]
-
-    with open('./pickle/padded_set.pickle', 'rb') as f:
-        df = pickle.load(f)
-
-    df = df.head(1000)
-
-    df = df.loc[df['line'] == line_number] # WHY PANDAS WHY A STRING?! lol
-
-    syllables = df['syllable'].tolist()
 
     result = {
         "expected" : list(expected),
-        "predicted" : list(predicted),
+        "predicted" : list(predicted_int),
         "similarity" : similarity,
         "syllables" : syllables,
         "correct_list" : correct_list,
@@ -67,8 +73,6 @@ def Get_neural_data():
         "labels_predicted": labels_predicted,
         "labels_expected": labels_expected,
     }
-
-    # print(result)
 
     return jsonify(result)
 
