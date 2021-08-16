@@ -1,6 +1,6 @@
-# Computational Creativity 2020
+# Latin Scansion Model 2021
 # This simple FLASK server interfaces with
-# the Oracle creator.
+# the OSCC and the LSM
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
 from flask_restful import Resource, Api
@@ -12,10 +12,9 @@ from json import dumps
 # pipInstall flask flask_cors flask_restful flask_jsonpify
 
 # RUN INSTRUCTIONS
-# FLASK_APP=DIPP.py FLASK_ENV=development flask run --port 5002
+# FLASK_APP=<filename>.py FLASK_ENV=development flask run --port 5002
 
 from tensorflow.keras import models
-from tensorflow.keras import layers
 import numpy as np
 import pickle
 
@@ -29,12 +28,12 @@ def Get_neural_data():
 
     line_number = int(request.args.get('line_number'))
 
-    with open('../pickle/X.npy', 'rb') as f:
+    with open('./pickle/X.npy', 'rb') as f:
         X = np.load(f, allow_pickle=True)
-    with open('../pickle/y.npy', 'rb') as f:
+    with open('./pickle/y.npy', 'rb') as f:
         y = np.load(f, allow_pickle=True)
 
-    model = models.load_model('../pickle/model')
+    model = models.load_model('./pickle/model')
 
     # This works fine for binary classification
     yhat = model.predict(X)
@@ -49,7 +48,7 @@ def Get_neural_data():
     labels_predicted = ['—' if i==1 else '⏑' if i==0 else i for i in predicted]
     labels_expected = ['—' if i==1 else '⏑' if i==0 else i for i in expected]
 
-    with open('../pickle/padded_set.pickle', 'rb') as f:
+    with open('./pickle/padded_set.pickle', 'rb') as f:
         df = pickle.load(f)
 
     df = df.head(1000)
@@ -77,20 +76,19 @@ def Calculate_list_similarity(list1, list2):
     # Calculates the similarity between two lists (entry for entry)
     score = 20
 
-    new_list = []
+    correct_list = []
 
     for i in range(len(list1)):
-        # print(list1[i], list2[i])
 
         if list1[i] != list2[i]:
             score -= 1
-            new_list.append('orange')
+            correct_list.append('orange')
         else:
-            new_list.append('lightgreen')
+            correct_list.append('lightgreen')
 
     score = int(score / len(list1) * 100)
 
-    return score, new_list
+    return score, correct_list
 
 # MAIN
 if __name__ == '__main__':
