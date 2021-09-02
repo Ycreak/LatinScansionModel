@@ -35,7 +35,6 @@ class Neural_network_handler:
         test_model = True
 
         load_X_y = False
-        verbose = True
 
         # This functions add padding to every line
         if add_padding:
@@ -44,7 +43,7 @@ class Neural_network_handler:
             util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'padded_set'), df)
 
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'padded_set'))
-        if verbose: print(df)
+        if self.cf.get('Util', 'verbose'): print(df)
 
         if flatten_vector:
             # The network wants a single vector as input, so we flatten it for every line in the text
@@ -52,7 +51,7 @@ class Neural_network_handler:
             df = self.Flatten_dataframe_column(df, 'vector')
             util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'), df)
         df = util.Pickle_read(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'flattened_vectors'))
-        if verbose: print(df)
+        if self.cf.get('Util', 'verbose'): print(df)
 
         ####
         # TODO: Philippe plz continue here
@@ -109,28 +108,12 @@ class Neural_network_handler:
             # yhat = model.predict(X).argmax(axis=-1) #model.predict_classes(X)
             # print([labels[i] for i in model.predict(X).argmax(axis=-1)])
 
-            create_prediction_df = True
 
             # This works fine for binary classification
             yhat = model.predict(X)
 
-
-            if create_prediction_df:
-                # TODO: ADD COMMENTS
-                column_names = ["predicted", "expected"]
-                new_df = pd.DataFrame(columns = column_names)
-
-                for i in Bar('Processing').iter(range(len(X))):
-                    new_line = {'expected': y[i], 'predicted': yhat[i]}
-                    new_df = new_df.append(new_line, ignore_index=True)
-
-                book_line_df = df[['book','line', 'syllable']]
-
-                prediction_df = pd.concat([book_line_df, new_df], axis=1, join='inner')
-
-                print(prediction_df)
-
-                util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'prediction_df'), prediction_df)
+            ### Uncomment this if you want to create a prediction dataframe
+            # self.Create_prediction_df(df, X, y, yhat)
 
             # Predict and test the first 10 lines. Also, print the similarity of predicted and expected
             for i in range(10):
@@ -148,16 +131,8 @@ class Neural_network_handler:
 
                 print('\n')
 
-    def Calculate_list_similarity(self, list1, list2):
-        # Calculates the similarity between two lists (entry for entry)
-        score = 20
 
-        for i in range(len(list1)):
 
-            if list1[i] != list2[i]:
-                score -= 1
-
-        return score / len(list1) * 100
 
     def Get_model(self, n_inputs, n_outputs):
         # Creates the model and its layers. 
@@ -318,6 +293,17 @@ class Neural_network_handler:
 
         return new_df
 
+    def Calculate_list_similarity(self, list1, list2):
+        # Calculates the similarity between two lists (entry for entry)
+        score = self.cf.getint('NeuralNetwork', 'max_length')
+
+        for i in range(len(list1)):
+
+            if list1[i] != list2[i]:
+                score -= 1
+
+        return score / len(list1) * 100
+
     def Create_plots(self, history):
         # Does what it says on the tin
 
@@ -337,3 +323,19 @@ class Neural_network_handler:
         pyplot.savefig('plots/plot.png')
 
 
+    def Create_prediction_df(self, df, X, y, yhat):
+        # Creates a dataframe with predictions. Used by OSCC (for now)
+        column_names = ["predicted", "expected"]
+        new_df = pd.DataFrame(columns = column_names)
+
+        for i in Bar('Processing').iter(range(len(X))):
+            new_line = {'expected': y[i], 'predicted': yhat[i]}
+            new_df = new_df.append(new_line, ignore_index=True)
+
+        book_line_df = df[['book','line', 'syllable']]
+
+        prediction_df = pd.concat([book_line_df, new_df], axis=1, join='inner')
+
+        print(prediction_df)
+
+        util.Pickle_write(self.cf.get('Pickle', 'path'), self.cf.get('Pickle', 'prediction_df'), prediction_df)

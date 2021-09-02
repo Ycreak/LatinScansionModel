@@ -2,11 +2,6 @@ import re
 
 # CLTK related
 import cltk
-# from cltk.ir.query import search_corpus
-# from cltk.corpus.utils.importer import CorpusImporter
-# from cltk.corpus.readers import get_corpus_reader
-# from cltk.stem.latin.syllabifier import Syllabifier
-
 from pedecerto.rhyme import *
 
 from bs4 import BeautifulSoup
