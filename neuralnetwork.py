@@ -64,8 +64,8 @@ class Neural_network_handler:
         # print("Training target data: shape={}".format(y.shape))
 
         # Encode: 2 for elision and 3 for padding (0 for short, 1 for long)
-        y[y == 2] = 1 # Dont forget, y is numpy.ndarray
-        y[y == 3] = 1
+        # y[y == 2] = 1 # Dont forget, y is numpy.ndarray
+        # y[y == 3] = 1
 
         if create_model:
             ''' 

@@ -1,0 +1,396 @@
+[{'long': 1.0, 'short': 0.0, 'elision': 0.0}, {'long': 0.339, 'short': 0.66, 'elision': 0.001}, {'long': 0.0612, 'short': 0.9369, 'elision': 0.0019}, {'long': 0.9932, 'short': 0.0068, 'elision': 0.0}, {'long': 0.0001, 'short': 0.0, 'elision': 0.9999}, {'long': 0.9998, 'short': 0.0002, 'elision': 0.0}, {'long': 0.0, 'short': 0.0013, 'elision': 0.9987}, {'long': 0.9839, 'short': 0.0161, 'elision': 0.0}, {'long': 0.9955, 'short': 0.0045, 'elision': 0.0}, {'long': 0.8858, 'short': 0.1142, 'elision': 0.0}, {'long': 0.9997, 'short': 0.0003, 'elision': 0.0}, {'long': 0.5236, 'short': 0.4764, 'elision': 0.0}, {'long': 0.0317, 'short': 0.9679, 'elision': 0.0004}, {'long': 0.0133, 'short': 0.9866, 'elision': 0.0}, {'long': 1.0, 'short': 0.0, 'elision': 0.0}, {'long': 0.9989, 'short': 0.0001, 'elision': 0.0011}]
+['long', 'short', 'short', 'long', 'elision', 'long', 'elision', 'long', 'long', 'long', 'long', 'long', 'short', 'short', 'long', 'long']
+
+We are now looking at syllable "li".
+I scanned it as being "long"
+My confidence is {'long': 1.0, 'short': 0.0, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:li', 'long') 0.17786
+('0:last_3_char:li', 'short') -0.02209
+('0:last_3_char:li', 'elision') -0.92371
+('0:last_2_char:li', 'long') 0.007396
+('0:last_2_char:li', 'short') -0.082254
+('0:last_2_char:li', 'elision') -1.0332
+('+1:word:to', 'long') 0.40499
+('+1:word:to', 'short') -0.313394
+('+1:first_1_char:t', 'long') 0.455
+('+1:first_1_char:t', 'short') -0.095883
+('+1:first_1_char:t', 'elision') -6.385153
+('+1:first_2_char:to', 'long') 0.475567
+('+1:first_2_char:to', 'short') -0.027604
+
+We are now looking at syllable "to".
+I scanned it as being "short"
+My confidence is {'long': 0.339, 'short': 0.66, 'elision': 0.001}:
+Below are the reasons why:
+('0:last_3_char:to', 'long') -0.053385
+('0:last_3_char:to', 'short') -0.27077
+('0:last_3_char:to', 'elision') 1.660154
+('0:last_2_char:to', 'long') -0.059073
+('0:last_2_char:to', 'short') -0.267693
+('0:last_2_char:to', 'elision') 1.670994
+('-1:word:li', 'long') -0.102707
+('-1:word:li', 'short') 0.223085
+('-1:word:li', 'elision') 0.120195
+('-1:last_1_char:i', 'long') -0.006944
+('-1:last_1_char:i', 'short') -0.188736
+('-1:last_1_char:i', 'elision') 0.179751
+('-1:last_2_char:li', 'long') -0.146284
+('-1:last_2_char:li', 'short') 0.44833
+('-1:last_2_char:li', 'elision') -0.036968
+('+1:word:ra', 'long') 0.000172
+('+1:word:ra', 'short') 0.131329
+('+1:first_1_char:r', 'long') 0.437814
+('+1:first_1_char:r', 'short') -0.052629
+('+1:first_1_char:r', 'elision') -6.272851
+('+1:first_2_char:ra', 'long') -0.00041
+('+1:first_2_char:ra', 'short') 0.031525
+
+We are now looking at syllable "ra".
+I scanned it as being "short"
+My confidence is {'long': 0.0612, 'short': 0.9369, 'elision': 0.0019}:
+Below are the reasons why:
+('0:last_3_char:ra', 'long') -0.942711
+('0:last_3_char:ra', 'short') 0.135042
+('0:last_3_char:ra', 'elision') 2.703997
+('0:last_2_char:ra', 'long') -0.027435
+('0:last_2_char:ra', 'short') -0.00232
+('0:last_2_char:ra', 'elision') 0.907038
+('-1:word:to', 'long') -0.263594
+('-1:word:to', 'short') -0.00336
+('-1:word:to', 'elision') 0.431548
+('-1:last_1_char:o', 'long') -0.034554
+('-1:last_1_char:o', 'short') 0.046343
+('-1:last_1_char:o', 'elision') -0.108598
+('-1:last_2_char:to', 'long') -0.333348
+('-1:last_2_char:to', 'short') -0.002945
+('-1:last_2_char:to', 'elision') 0.432623
+('+1:word:mul', 'long') -0.06615
+('+1:word:mul', 'short') 0.738952
+('+1:first_1_char:m', 'long') 0.206288
+('+1:first_1_char:m', 'short') 0.013035
+('+1:first_1_char:m', 'elision') -6.116792
+('+1:first_2_char:mu', 'long') -0.00167
+('+1:first_2_char:mu', 'short') 0.107839
+
+We are now looking at syllable "mul".
+I scanned it as being "long"
+My confidence is {'long': 0.9932, 'short': 0.0068, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:mul', 'long') -0.652461
+('0:last_3_char:mul', 'short') 1.082138
+('0:last_2_char:ul', 'long') 0.417363
+('0:last_2_char:ul', 'short') -0.02596
+('-1:word:ra', 'long') 0.093719
+('-1:word:ra', 'short') -0.075545
+('-1:word:ra', 'elision') 0.096627
+('-1:last_1_char:a', 'long') -0.007131
+('-1:last_1_char:a', 'short') 0.028602
+('-1:last_1_char:a', 'elision') 0.010653
+('-1:last_2_char:ra', 'long') -0.001212
+('-1:last_2_char:ra', 'short') 0.006467
+('-1:last_2_char:ra', 'elision') 0.113811
+('+1:word:tum', 'long') 0.50348
+('+1:word:tum', 'short') -0.017571
+('+1:first_1_char:t', 'long') 0.455
+('+1:first_1_char:t', 'short') -0.095883
+('+1:first_1_char:t', 'elision') -6.385153
+('+1:first_2_char:tu', 'long') 0.090344
+('+1:first_2_char:tu', 'short') -0.051769
+('+1:first_2_char:tu', 'elision') -0.495467
+
+We are now looking at syllable "tum".
+I scanned it as being "elision"
+My confidence is {'long': 0.0001, 'short': 0.0, 'elision': 0.9999}:
+Below are the reasons why:
+('0:last_3_char:tum', 'long') 0.33161
+('0:last_3_char:tum', 'elision') 1.055442
+('0:last_2_char:um', 'long') 1.351131
+('0:last_2_char:um', 'elision') 13.785662
+('-1:word:mul', 'long') 0.217817
+('-1:word:mul', 'short') -0.122255
+('-1:word:mul', 'elision') -0.480765
+('-1:last_1_char:l', 'long') -0.036765
+('-1:last_1_char:l', 'short') -0.028681
+('-1:last_1_char:l', 'elision') 0.707089
+('-1:last_2_char:ul', 'long') -0.126225
+('-1:last_2_char:ul', 'short') 0.007741
+('-1:last_2_char:ul', 'elision') 0.828436
+('+1:word:il', 'long') -0.887068
+('+1:word:il', 'short') -0.000344
+('+1:word:il', 'elision') 0.859501
+('+1:first_1_char:i', 'long') -4.411473
+('+1:first_1_char:i', 'short') 0.450015
+('+1:first_1_char:i', 'elision') 3.094018
+('+1:first_2_char:il', 'long') -0.887068
+('+1:first_2_char:il', 'short') -0.000344
+('+1:first_2_char:il', 'elision') 0.859501
+
+We are now looking at syllable "il".
+I scanned it as being "long"
+My confidence is {'long': 0.9998, 'short': 0.0002, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:il', 'long') 1.385456
+('0:last_2_char:il', 'long') 0.503261
+('0:last_2_char:il', 'short') -0.399017
+('-1:word:tum', 'long') 0.193124
+('-1:word:tum', 'short') -0.036696
+('-1:word:tum', 'elision') -0.052221
+('-1:last_1_char:m', 'long') 0.1036
+('-1:last_1_char:m', 'short') -0.03269
+('-1:last_1_char:m', 'elision') -0.277735
+('-1:last_2_char:um', 'long') 0.136337
+('-1:last_2_char:um', 'short') -0.01043
+('-1:last_2_char:um', 'elision') 0.036528
+('+1:word:le', 'long') -0.04383
+('+1:word:le', 'short') 0.403989
+('+1:first_1_char:l', 'long') 0.061148
+('+1:first_1_char:l', 'short') 0.010578
+('+1:first_1_char:l', 'elision') -5.399172
+('+1:first_2_char:le', 'long') -0.010966
+('+1:first_2_char:le', 'short') 0.06541
+
+We are now looking at syllable "le".
+I scanned it as being "elision"
+My confidence is {'long': 0.0, 'short': 0.0013, 'elision': 0.9987}:
+Below are the reasons why:
+('0:last_3_char:le', 'long') -1.387873
+('0:last_3_char:le', 'short') 0.204053
+('0:last_3_char:le', 'elision') -0.023722
+('0:last_2_char:le', 'long') -0.051287
+('0:last_2_char:le', 'short') -0.043705
+('0:last_2_char:le', 'elision') -0.004758
+('-1:word:il', 'long') -0.558269
+('-1:word:il', 'short') -0.076634
+('-1:word:il', 'elision') 2.225445
+('-1:last_1_char:l', 'long') -0.036765
+('-1:last_1_char:l', 'short') -0.028681
+('-1:last_1_char:l', 'elision') 0.707089
+('-1:last_2_char:il', 'long') -0.06892
+('-1:last_2_char:il', 'short') -0.183007
+('-1:last_2_char:il', 'elision') 0.146767
+('+1:word:et', 'long') -1.074497
+('+1:word:et', 'short') -0.02567
+('+1:word:et', 'elision') 1.987163
+('+1:first_1_char:e', 'long') -3.528121
+('+1:first_1_char:e', 'short') 0.245419
+('+1:first_1_char:e', 'elision') 2.875703
+('+1:first_2_char:et', 'long') -1.074497
+('+1:first_2_char:et', 'short') -0.02567
+('+1:first_2_char:et', 'elision') 1.987163
+
+We are now looking at syllable "et".
+I scanned it as being "long"
+My confidence is {'long': 0.9839, 'short': 0.0161, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:et', 'long') 0.010717
+('0:last_3_char:et', 'short') 0.212905
+('0:last_2_char:et', 'long') -0.054637
+('0:last_2_char:et', 'short') 1.338031
+('-1:word:le', 'long') 0.069944
+('-1:word:le', 'short') -0.038498
+('-1:word:le', 'elision') 0.001119
+('-1:last_1_char:e', 'long') -0.029257
+('-1:last_1_char:e', 'short') 0.147922
+('-1:last_1_char:e', 'elision') -0.05549
+('-1:last_2_char:le', 'long') 0.098322
+('-1:last_2_char:le', 'short') -0.108006
+('-1:last_2_char:le', 'elision') 0.123273
+('+1:word:ter', 'long') -0.380508
+('+1:word:ter', 'short') 0.586023
+('+1:first_1_char:t', 'long') 0.455
+('+1:first_1_char:t', 'short') -0.095883
+('+1:first_1_char:t', 'elision') -6.385153
+('+1:first_2_char:te', 'long') 0.018136
+('+1:first_2_char:te', 'short') 0.068108
+
+We are now looking at syllable "ter".
+I scanned it as being "long"
+My confidence is {'long': 0.9955, 'short': 0.0045, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:ter', 'long') -0.291295
+('0:last_3_char:ter', 'short') 0.600548
+('0:last_2_char:er', 'long') -0.061136
+('0:last_2_char:er', 'short') 0.939207
+('-1:word:et', 'long') 0.304452
+('-1:word:et', 'short') -0.066682
+('-1:word:et', 'elision') -0.294823
+('-1:last_1_char:t', 'long') 0.017193
+('-1:last_1_char:t', 'short') 0.017696
+('-1:last_1_char:t', 'elision') -1.007268
+('-1:last_2_char:et', 'long') 0.231002
+('-1:last_2_char:et', 'short') -0.005791
+('-1:last_2_char:et', 'elision') -1.112943
+('+1:word:ris', 'long') 0.42351
+('+1:word:ris', 'short') -0.081983
+('+1:first_1_char:r', 'long') 0.437814
+('+1:first_1_char:r', 'short') -0.052629
+('+1:first_1_char:r', 'elision') -6.272851
+('+1:first_2_char:ri', 'long') -0.007174
+('+1:first_2_char:ri', 'short') 0.041444
+
+We are now looking at syllable "ris".
+I scanned it as being "long"
+My confidence is {'long': 0.8858, 'short': 0.1142, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:ris', 'long') 0.030667
+('0:last_3_char:ris', 'short') 0.182624
+('0:last_2_char:is', 'long') 1.396716
+('0:last_2_char:is', 'short') 0.198247
+('-1:word:ter', 'long') -0.028229
+('-1:word:ter', 'short') 0.130897
+('-1:word:ter', 'elision') -0.038772
+('-1:last_1_char:r', 'long') 0.013268
+('-1:last_1_char:r', 'short') 0.000641
+('-1:last_1_char:r', 'elision') -0.273298
+('-1:last_2_char:er', 'long') 0.002247
+('-1:last_2_char:er', 'short') -0.005055
+('-1:last_2_char:er', 'elision') -0.639131
+('+1:first_1_char:i', 'long') -4.411473
+('+1:first_1_char:i', 'short') 0.450015
+('+1:first_1_char:i', 'elision') 3.094018
+
+We are now looking at syllable "iac".
+I scanned it as being "long"
+My confidence is {'long': 0.9997, 'short': 0.0003, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_2_char:ac', 'long') 1.101954
+('0:last_2_char:ac', 'short') -0.805168
+('-1:word:ris', 'long') -0.028866
+('-1:word:ris', 'short') 0.038018
+('-1:word:ris', 'elision') -0.499586
+('-1:last_1_char:s', 'long') 0.015671
+('-1:last_1_char:s', 'short') 0.081747
+('-1:last_1_char:s', 'elision') -0.742164
+('-1:last_2_char:is', 'long') -0.019051
+('-1:last_2_char:is', 'short') 0.2535
+('-1:last_2_char:is', 'elision') -0.069175
+('+1:word:ta', 'long') 0.289975
+('+1:word:ta', 'short') -0.225949
+('+1:first_1_char:t', 'long') 0.455
+('+1:first_1_char:t', 'short') -0.095883
+('+1:first_1_char:t', 'elision') -6.385153
+('+1:first_2_char:ta', 'long') 0.236858
+('+1:first_2_char:ta', 'short') -0.151634
+
+We are now looking at syllable "ta".
+I scanned it as being "long"
+My confidence is {'long': 0.5236, 'short': 0.4764, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:ta', 'long') -0.249361
+('0:last_3_char:ta', 'short') 0.097751
+('0:last_3_char:ta', 'elision') 1.688202
+('0:last_2_char:ta', 'long') -0.614634
+('0:last_2_char:ta', 'short') 0.103854
+('0:last_2_char:ta', 'elision') 1.733415
+('-1:last_1_char:c', 'long') -0.02285
+('-1:last_1_char:c', 'short') -0.001436
+('-1:last_1_char:c', 'elision') -1.064284
+('-1:last_2_char:ac', 'long') 0.233801
+('-1:last_2_char:ac', 'short') 0.012068
+('-1:last_2_char:ac', 'elision') -1.105659
+('+1:word:tus', 'long') 0.423787
+('+1:word:tus', 'short') -0.177696
+('+1:first_1_char:t', 'long') 0.455
+('+1:first_1_char:t', 'short') -0.095883
+('+1:first_1_char:t', 'elision') -6.385153
+('+1:first_2_char:tu', 'long') 0.090344
+('+1:first_2_char:tu', 'short') -0.051769
+('+1:first_2_char:tu', 'elision') -0.495467
+
+We are now looking at syllable "tus".
+I scanned it as being "short"
+My confidence is {'long': 0.0317, 'short': 0.9679, 'elision': 0.0004}:
+Below are the reasons why:
+('0:last_3_char:tus', 'long') 0.431007
+('0:last_3_char:tus', 'short') 0.043773
+('0:last_2_char:us', 'long') 0.673594
+('0:last_2_char:us', 'short') 1.885864
+('-1:word:ta', 'long') -0.287757
+('-1:word:ta', 'short') 0.32956
+('-1:word:ta', 'elision') 0.570102
+('-1:last_1_char:a', 'long') -0.007131
+('-1:last_1_char:a', 'short') 0.028602
+('-1:last_1_char:a', 'elision') 0.010653
+('-1:last_2_char:ta', 'long') -0.306076
+('-1:last_2_char:ta', 'short') 0.445856
+('-1:last_2_char:ta', 'elision') 0.092003
+('+1:word:et', 'long') -1.074497
+('+1:word:et', 'short') -0.02567
+('+1:word:et', 'elision') 1.987163
+('+1:first_1_char:e', 'long') -3.528121
+('+1:first_1_char:e', 'short') 0.245419
+('+1:first_1_char:e', 'elision') 2.875703
+('+1:first_2_char:et', 'long') -1.074497
+('+1:first_2_char:et', 'short') -0.02567
+('+1:first_2_char:et', 'elision') 1.987163
+
+We are now looking at syllable "et".
+I scanned it as being "short"
+My confidence is {'long': 0.0133, 'short': 0.9866, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:et', 'long') 0.010717
+('0:last_3_char:et', 'short') 0.212905
+('0:last_2_char:et', 'long') -0.054637
+('0:last_2_char:et', 'short') 1.338031
+('-1:word:tus', 'long') -0.306105
+('-1:word:tus', 'short') 0.332327
+('-1:word:tus', 'elision') 0.009162
+('-1:last_1_char:s', 'long') 0.015671
+('-1:last_1_char:s', 'short') 0.081747
+('-1:last_1_char:s', 'elision') -0.742164
+('-1:last_2_char:us', 'long') -0.001076
+('-1:last_2_char:us', 'short') 0.063143
+('-1:last_2_char:us', 'elision') -0.912678
+('+1:word:al', 'long') -1.436118
+('+1:word:al', 'short') 0.062366
+('+1:word:al', 'elision') 1.270979
+('+1:first_1_char:a', 'long') -4.212098
+('+1:first_1_char:a', 'short') -0.126965
+('+1:first_1_char:a', 'elision') 2.440036
+('+1:first_2_char:al', 'long') -1.437934
+('+1:first_2_char:al', 'short') 0.0619
+('+1:first_2_char:al', 'elision') 1.253206
+
+We are now looking at syllable "al".
+I scanned it as being "long"
+My confidence is {'long': 1.0, 'short': 0.0, 'elision': 0.0}:
+Below are the reasons why:
+('0:last_3_char:al', 'long') 0.248518
+('0:last_2_char:al', 'long') 2.213483
+('-1:word:et', 'long') 0.304452
+('-1:word:et', 'short') -0.066682
+('-1:word:et', 'elision') -0.294823
+('-1:last_1_char:t', 'long') 0.017193
+('-1:last_1_char:t', 'short') 0.017696
+('-1:last_1_char:t', 'elision') -1.007268
+('-1:last_2_char:et', 'long') 0.231002
+('-1:last_2_char:et', 'short') -0.005791
+('-1:last_2_char:et', 'elision') -1.112943
+('+1:word:to', 'long') 0.40499
+('+1:word:to', 'short') -0.313394
+('+1:first_1_char:t', 'long') 0.455
+('+1:first_1_char:t', 'short') -0.095883
+('+1:first_1_char:t', 'elision') -6.385153
+('+1:first_2_char:to', 'long') 0.475567
+('+1:first_2_char:to', 'short') -0.027604
+
+We are now looking at syllable "to".
+I scanned it as being "long"
+My confidence is {'long': 0.9989, 'short': 0.0001, 'elision': 0.0011}:
+Below are the reasons why:
+('0:last_3_char:to', 'long') -0.053385
+('0:last_3_char:to', 'short') -0.27077
+('0:last_3_char:to', 'elision') 1.660154
+('0:last_2_char:to', 'long') -0.059073
+('0:last_2_char:to', 'short') -0.267693
+('0:last_2_char:to', 'elision') 1.670994
+('-1:word:al', 'long') -0.003118
+('-1:word:al', 'short') 0.034951
+('-1:word:al', 'elision') -0.058694
+('-1:last_1_char:l', 'long') -0.036765
+('-1:last_1_char:l', 'short') -0.028681
+('-1:last_1_char:l', 'elision') 0.707089
+('-1:last_2_char:al', 'long') 0.031436
+('-1:last_2_char:al', 'short') -0.213975
+('-1:last_2_char:al', 'elision') -0.022841

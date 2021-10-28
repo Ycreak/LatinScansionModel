@@ -15,6 +15,11 @@
 # Leiden University 2021
 
 import pickle
+import configparser
+
+# Read the config file for later use
+cf = configparser.ConfigParser()
+cf.read("config.ini")
 
 def Pickle_write(path, file_name, object):
     destination = path + file_name
@@ -53,12 +58,12 @@ def clean(ll):
         and l["pattern"] != "not scanned"
     ]
 
-def Create_files_list(path, extension):
+def Create_files_list(path, substring):
     """Creates a list of files to be processed
 
     Args:
         path (string): folder to be searched
-        extension (string): extension of files to be searched
+        substring (string): substring of files to be searched
 
     Returns:
         list: list with files to be searched
@@ -68,7 +73,7 @@ def Create_files_list(path, extension):
     list = []
 
     for file in os.listdir(path):
-        if file.endswith(".xml"):
+        if file.find(substring) != -1:
             list.append(file)    
 
     return list

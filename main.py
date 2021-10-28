@@ -39,14 +39,10 @@ class Vector:
 
 # Parameters to run each step
 run_preprocessor = False
-run_pedecerto = False
+run_pedecerto = True
 run_model_generator = False
 add_embeddings_to_df = False 
-run_neural_network = True
-
-# Read the config file for later use
-cf = configparser.ConfigParser()
-cf.read("config.ini")
+run_neural_network = False
 
 ''' Run the preprocessor on the given text if needed.
 This reads the text, cleans it and returns a list of syllables for now
@@ -54,32 +50,32 @@ To achieve this, the pedecerto tool is used
 '''
 if run_preprocessor:
     print('Running preprocessor')
-    preprocessor = Text_preprocessor(cf.get('Text', 'name'))
-    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'), preprocessor.character_list)
+    preprocessor = Text_preprocessor(util.cf.get('Text', 'name'))
+    util.Pickle_write(util.cf.get('Pickle', 'path'), util.cf.get('Pickle', 'char_list'), preprocessor.character_list)
 
 # Load the preprocessed text
-character_list = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'char_list'))
-if cf.get('Util', 'verbose'): print(character_list)
+character_list = util.Pickle_read(util.cf.get('Pickle', 'path'), util.cf.get('Pickle', 'char_list'))
+if int(util.cf.get('Util', 'verbose')): print(character_list)
 
 ''' Now create a dataframe. Containing: syllable, length, vector.
 '''
 if run_pedecerto:
     print('Running pedecerto parser')
-    parse = Pedecerto_parser(cf.get('Pedecerto', 'path_texts'), -1)  
-    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'), parse.df)
+    parse = Pedecerto_parser(util.cf.get('Pedecerto', 'path_texts'))
+    # This function created pickle files for all texts that are in the ./texts/ folder
 
-pedecerto_df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'pedecerto_df'))
-if cf.get('Util', 'verbose'): print(pedecerto_df)
+pedecerto_df = util.Pickle_read(util.cf.get('Pickle', 'path'), util.cf.get('Pickle', 'pedecerto_df'))
+if util.cf.get('Util', 'verbose'): print(pedecerto_df)
 
 # Run the model generator on the given list if needed
 if run_model_generator:
     print('Running Word2Vec model generator')
     # Create a word2vec model from the provided character list
-    word2vec_creator = Word_vector_creator(character_list, cf.getint('Word2Vec', 'vector_size'), cf.getint('Word2Vec', 'window_size'))
-    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'), word2vec_creator.model)
+    word2vec_creator = Word_vector_creator(character_list, util.cf.getint('Word2Vec', 'vector_size'), util.cf.getint('Word2Vec', 'window_size'))
+    util.Pickle_write(util.cf.get('Pickle', 'path'), util.cf.get('Pickle', 'word2vec_model'), word2vec_creator.model)
 
 # Load the saved/created model
-word2vec_model = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'word2vec_model'))
+word2vec_model = util.Pickle_read(util.cf.get('Pickle', 'path'), util.cf.get('Pickle', 'word2vec_model'))
 
 # Add the embeddings created by word2vec to the dataframe
 if add_embeddings_to_df:
@@ -99,14 +95,14 @@ if add_embeddings_to_df:
         except:
             IndexError('Syllable has no embedding yet.')
 
-    util.Pickle_write(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'), df)
+    util.Pickle_write(util.cf.get('Pickle', 'path'), util.cf.get('Pickle', 'embedding_df'), df)
 
 # Provide the neural network with the dataframe
 if run_neural_network:
     print('Running the neural network generation')
 
-    df = util.Pickle_read(cf.get('Pickle', 'path'), cf.get('Pickle', 'embedding_df'))
-    if cf.get('Util', 'verbose'): print(df)
+    df = util.Pickle_read(util.cf.get('Pickle', 'path'), util.cf.get('Pickle', 'embedding_df'))
+    if util.cf.get('Util', 'verbose'): print(df)
 
     nn = Neural_network_handler(df)
 

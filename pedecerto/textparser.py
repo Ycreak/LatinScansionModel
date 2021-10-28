@@ -5,25 +5,23 @@ import string
 import os
 import timeit
 from progress.bar import Bar
-
+import copy
 import utilities as util
 
 import pedecerto.rhyme as pedecerto
 
+#NB: line 1069 from Rerum Natura deleted
+
 class Pedecerto_parser:
   """This class parses the Pedecerto XML into a dataframe which can be used for
   training models.
-  """  
 
-  df = pd.DataFrame()
-  
-  # utilities = utilities.Utility()
-  # constants = ScansionConstants()
-  
-  def __init__(self, path, givenLine = -1):
+  NB: the XML files are stripped of their headers, leaving the body to be processed
+  """  
+  def __init__(self, path):
+ 
     # Create pandas dataframe
-    column_names = ["author", "text", "book", "line", "syllable", "length"]
-    # column_names = ["author", "text", "line", "syllable", "foot", "feet_pos", "length", "word_boundary", "metrical_feature"]
+    column_names = ["title", "line", "syllable", "length"]
     df = pd.DataFrame(columns = column_names) 
     
     # Add all entries to process to a list
@@ -31,6 +29,10 @@ class Pedecerto_parser:
     # Process all entries added to the list
     for entry in entries:
       with open(path + entry) as fh:
+        # for each text, an individual dataframe will be created and saved as pickle
+        new_text_df = copy.deepcopy(df)
+        pickle_name = 'syllable_label_' + entry + '.pickle'
+
         # Use beautiful soup to process the xml
         soupedEntry = BeautifulSoup(fh,"xml")
         # Retrieve the title and author from the xml file
@@ -39,52 +41,64 @@ class Pedecerto_parser:
         # Clean the lines (done by MQDQ)
         soupedEntry = util.clean(soupedEntry('line'))
 
-        if givenLine == -1: #FIXME: deprecated
-          # Do the entire folder
-          # for line in range(len(soupedEntry)):
-          for line in Bar('Processing {0}, {1}'.format(author, text_title)).iter(range(len(soupedEntry))):
-            # progress_percentage = round(line / len(soupedEntry) * 100 ,2)
-            # print('Progress on {0}, {1}: line {2} of {3} processed: {4}%'.format(self.author, self.title, line, len(soupedEntry), progress_percentage))
-
-            book_title = int(soupedEntry[line].parent.get('title'))
-
-            # Process the entry. It will append the line to the df
-            line_df = self.Process_line(soupedEntry[line], book_title, text_title, author)
-            df = df.append(line_df, ignore_index=True)
-            # If I greatly improve my own code, am I a wizard, or a moron?
+        # for line in range(len(soupedEntry)):
+        for line in Bar('Processing {0}, {1}'.format(author, text_title)).iter(range(len(soupedEntry))):
+          book_title = int(soupedEntry[line].parent.get('title'))
+          # Process the entry. It will append the line to the df
+          if not soupedEntry[line]['name'].isdigit():
+            continue # If our line name is not a digit, the line is uncertain. We skip over it  
+          line_df = self.Process_line(soupedEntry[line], book_title)
+          new_text_df = new_text_df.append(line_df, ignore_index=True) # If I greatly improve my own code, am I a wizard, or a moron?
         
-          print(df)
+        # Clean the lines that did not succeed
+        new_text_df = self.clean_generated_df(new_text_df)
 
-        else:
-          # Process just the given line (testing purposes).
-          # df = self.Process_line(soupedEntry[givenLine], df)
-          pass
-      # Store df for later use
-      self.df = df #FIXME: better name. How shall we store and exchange between classes?
+        util.Pickle_write(util.cf.get('Pickle', 'path'), pickle_name, new_text_df)
 
-  def Process_line(self, givenLine, book_title, text_title, author):
+  def clean_generated_df(self, df):
+    # Processes all lines in the given df and deletes the line if there is an ERROR reported
+    for title_index in Bar('Cleaning dataframe').iter(range(df['title'].max())):
+        # Get only lines from this book
+        title_df = df.loc[df['title'] == title_index + 1]
+        # Per book, process the lines
+        for line_index in range(title_df['line'].max()):
+            line_df = title_df[title_df["line"] == line_index + 1]
+            if 'ERROR' in line_df['syllable'].values:
+                # Now delete this little dataframe from the main dataframe
+                keys = list(line_df.columns.values)
+                i1 = df.set_index(keys).index
+                i2 = line_df.set_index(keys).index
+                df = df[~i1.isin(i2)]
+
+    return df
+
+
+  def Process_line(self, given_line, book_title):
     """Processes a given XML pedecerto line. Puts syllable and length in a dataframe.
 
     Args:
-        givenLine (xml): pedecerto xml encoding of a line of poetry
+        given_line (xml): pedecerto xml encoding of a line of poetry
         df (dataframe): to store the data in
         book_title (str): title of the current book (Book 1)
-        text_title (str): title of the current text (Aeneid)
-        author (str): name of the current author
 
     Returns:
         dataframe: with syllables and their lenght (and some other information)
     """      
-    column_names = ["author", "text", "book", "line", "syllable", "length"]
+    column_names = ["title", "line", "syllable", "length"]
     df = pd.DataFrame(columns = column_names)
-    
-    current_line = givenLine['name']
+
+    current_line = given_line['name']
 
     # Parse every word and add its features
-    for w in givenLine("word"):
+    for w in given_line("word"):
       
       # Now for every word, syllabify it first
-      word_syllable_list = pedecerto._syllabify_word(w)
+      try:
+        word_syllable_list = pedecerto._syllabify_word(w)
+      except:
+        new_line = {'title': int(book_title), 'line': int(current_line), 'syllable': 'ERROR', 'length': -1}
+        df = df.append(new_line, ignore_index=True)
+        return df
 
       # And get its scansion
       scansion = w["sy"]
@@ -98,40 +112,29 @@ class Pedecerto_parser:
       for i in range(len(word_syllable_list)):
         # Now we loop through the syllable list of said word and extract features
         current_syllable = word_syllable_list[i].lower()
-        
+          
         # If we still have scansions available
         if number_of_scansions > 0:
 
-          foot = split_scansion[i][0]
           feet_pos = split_scansion[i][1]
 
           # Interpret length based on pedecerto encoding (could be done much quicker)
-          if feet_pos == 'A':
+          if feet_pos.isupper():
             length = 1
-          elif feet_pos == 'T':
-            length = 1
-          elif feet_pos == 'b':
+          elif feet_pos.islower():
             length = 0
-          elif feet_pos == 'c':
-            length = 0
-          elif feet_pos == '':
-            length = 2
-
-        # No scansions available? Elision. Denote with -1
+        # No scansions available? Elision. Denote with 2
         else:
           length = 2
-          feet_pos = 'NA'
-          foot = 'NA'
 
         # Keep track of performed operations
         number_of_scansions -= 1
 
         # Append to dataframe
-        new_line = {'author': author, 'text': text_title, 'book': int(book_title), 'line': int(current_line), 'syllable': current_syllable, 'length': int(length)}
+        new_line = {'title': int(book_title), 'line': int(current_line), 'syllable': current_syllable, 'length': int(length)}
         df = df.append(new_line, ignore_index=True)
 
     return df
-
 # UNUSED FUNCTIONS (for now)
   # def AddFeature_Speech(self, df):
   #   df['liquids'] = 0
